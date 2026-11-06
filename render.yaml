@@ -40,3 +40,4 @@ databases:
     databaseName: agrisure_db
     user: agrisure_user
     plan: free
+
