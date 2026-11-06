@@ -1,0 +1,164 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Request Farming Contract – {{ crop.title }} – AgriSure{% endblock %}
+{% block dashboard_title %}Initiate Contract Farming Agreement{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'layouts/buyer_sidebar.html' %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Produce Summary Banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-100 overflow-hidden flex items-center justify-center border border-emerald-200 flex-shrink-0">
+                {% if crop.featured_image %}
+                    <img src="{{ crop.featured_image.url }}" class="w-full h-full object-cover">
+                {% else %}
+                    <i data-lucide="sprout" class="w-8 h-8 text-emerald-700"></i>
+                {% endif %}
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">{{ crop.category.name }}</div>
+                <h2 class="font-heading text-xl font-bold text-forest-900">{{ crop.title }}</h2>
+                <div class="text-xs text-gray-500 mt-0.5">
+                    Farmer: <b class="text-gray-800">{{ crop.farmer.get_full_name }}</b> • {{ crop.district }}, {{ crop.state }} • Available: <b class="text-emerald-700">{{ crop.quantity_remaining }} {{ crop.unit }}</b>
+                </div>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="text-xs text-gray-400">Listing Price</div>
+            <div class="font-heading font-extrabold text-xl text-emerald-700">₹{{ crop.price_per_unit }}/{{ crop.unit }}</div>
+        </div>
+    </div>
+
+    <!-- Contract Proposal Form (Prompt 3 Section 1) -->
+    <div class="glass-card p-8 bg-white rounded-3xl border border-gray-200 shadow-xl space-y-6">
+        <div>
+            <h3 class="font-heading text-2xl font-bold text-forest-900">Define Contract Terms & Quantities</h3>
+            <p class="text-sm text-gray-500 mt-1">
+                Enter your required procurement volume, price per unit, delivery dates, and quality requirements to generate a formal binding contract.
+            </p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            {% if form.errors %}
+            <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs">
+                <b>Please correct the following errors:</b>
+                {{ form.errors }}
+            </div>
+            {% endif %}
+
+            <!-- Quantity & Proposed Price -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Requested Quantity ({{ crop.unit }}) *</label>
+                    {{ form.quantity }}
+                    <span class="text-[11px] text-gray-400">Available: up to {{ crop.quantity_remaining }} {{ crop.unit }}</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Proposed Price per {{ crop.unit }} (₹) *</label>
+                    {{ form.price_per_unit }}
+                    <span class="text-[11px] text-gray-400">Farmer's asking rate: ₹{{ crop.price_per_unit }}</span>
+                </div>
+            </div>
+
+            <!-- Auto-Calculated Value Banner -->
+            <div class="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Estimated Total Contract Value:</span>
+                    <p class="text-[11px] text-gray-500 mt-0.5">Calculated automatically as (Quantity × Proposed Price)</p>
+                </div>
+                <div class="font-heading font-extrabold text-2xl text-emerald-800" id="totalValueDisplay">₹ 0.00</div>
+            </div>
+
+            <!-- Delivery & Advance Terms -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Target Delivery Date *</label>
+                    {{ form.delivery_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Advance Escrow Deposit (%)</label>
+                    {{ form.advance_payment_percentage }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Required Quality Grade</label>
+                    {{ form.required_quality_grade }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Warehouse Delivery / Receiving Address *</label>
+                {{ form.delivery_address }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Quality Specifications & Tolerances</label>
+                    {{ form.quality_specifications }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Conditions & Escrow Terms</label>
+                    {{ form.payment_terms }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Additional Sourcing Conditions</label>
+                    {{ form.additional_conditions }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Terms & Penalty Clause (Optional)</label>
+                    {{ form.penalty_clause }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Buyer Message / Introduction Note to Farmer</label>
+                {{ form.buyer_message }}
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-200 text-xs text-gray-600 space-y-1">
+                <div class="font-bold text-gray-800 flex items-center gap-1.5">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Digital Acceptance & Escrow Notice</span>
+                </div>
+                <p>
+                    Submitting this request will automatically generate a formal Contract Farming Agreement (v1) and notify farmer <b>{{ crop.farmer.get_full_name }}</b>. As the initiator, your digital acceptance of version 1 is recorded automatically. The contract becomes legally active once the farmer approves.
+                </p>
+            </div>
+
+            <div class="flex gap-4 pt-2">
+                <button type="submit" class="btn btn-primary flex-1 py-3.5 text-base font-bold shadow-lg shadow-emerald-700/20">
+                    Generate & Submit Contract Request
+                </button>
+                <a href="{% url 'marketplace:crop_detail' crop.pk %}" class="btn btn-secondary px-6">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const qtyInput = document.getElementById('req_quantity');
+    const priceInput = document.getElementById('req_price');
+    const display = document.getElementById('totalValueDisplay');
+
+    function calculate() {
+        const q = parseFloat(qtyInput.value) || 0;
+        const p = parseFloat(priceInput.value) || 0;
+        const total = q * p;
+        display.textContent = '₹ ' + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    if (qtyInput && priceInput) {
+        qtyInput.addEventListener('input', calculate);
+        priceInput.addEventListener('input', calculate);
+        calculate();
+    }
+});
+</script>
+{% endblock %}

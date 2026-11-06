@@ -1,0 +1,90 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Dispute Mediation Console – AgriSure Backoffice{% endblock %}
+{% block dashboard_title %}Dispute Mediation & Arbitration Console{% endblock %}
+{% block sidebar_menu %}{% include 'layouts/admin_sidebar.html' %}{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div>
+                <h3 class="font-heading font-bold text-lg text-gray-900">Active Arbitration Cases</h3>
+                <p class="text-xs text-gray-500">Formal claims filed under AgriSure Contract Protection Framework</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="data-table w-full text-left">
+                <thead>
+                    <tr class="bg-gray-50/70 border-b border-gray-100 text-xs text-gray-500">
+                        <th class="p-4">Docket Number</th>
+                        <th class="p-4">Grievance & Category</th>
+                        <th class="p-4">Contract</th>
+                        <th class="p-4">Claimant vs Respondent</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4">Evidence</th>
+                        <th class="p-4 text-right">Arbitration Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-xs">
+                    {% for d in disputes %}
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="p-4 font-mono font-bold text-forest-900">
+                            {{ d.dispute_number }}
+                        </td>
+                        <td class="p-4">
+                            <span class="font-bold text-gray-900 block">{{ d.title }}</span>
+                            <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600">
+                                {{ d.get_category_display }}
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <a href="{% url 'contracts:detail' d.contract.pk %}" class="text-emerald-700 font-semibold hover:underline">
+                                #{{ d.contract.contract_number }}
+                            </a>
+                        </td>
+                        <td class="p-4">
+                            <span class="font-semibold text-gray-800">{{ d.raised_by.get_full_name }}</span>
+                            <span class="text-gray-400 block text-[10px]">vs. {{ d.against_party.get_full_name }}</span>
+                        </td>
+                        <td class="p-4">
+                            {% if d.status == 'OPEN' %}
+                                <span class="badge badge-warning text-[10px]">Open</span>
+                            {% elif d.status == 'UNDER_REVIEW' or d.status == 'IN_INVESTIGATION' %}
+                                <span class="badge text-[10px] bg-blue-100 text-blue-700">Under Review</span>
+                            {% elif d.status == 'RESOLVED' %}
+                                <span class="badge badge-success text-[10px]">Resolved</span>
+                            {% elif d.status == 'REJECTED' %}
+                                <span class="badge badge-danger text-[10px]">Rejected</span>
+                            {% else %}
+                                <span class="badge badge-secondary text-[10px]">{{ d.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            {% if d.evidence_file or d.evidence_document %}
+                                <a href="{{ d.evidence_file.url|default:d.evidence_document.url }}" target="_blank" class="text-emerald-700 hover:underline font-semibold inline-flex items-center gap-1">
+                                    <i data-lucide="paperclip" class="w-3 h-3"></i> File
+                                </a>
+                            {% else %}
+                                <span class="text-gray-400 italic">None</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
+                            <a href="{% url 'disputes:detail' d.pk %}" class="btn btn-primary py-1 px-3 text-[11px]">
+                                Mediate & Rule →
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="p-12 text-center text-sm text-gray-400">
+                            No disputes on record. Platform operations are smooth!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

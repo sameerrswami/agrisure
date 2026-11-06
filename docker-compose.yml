@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: agrisure_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agrisure_db}
+      POSTGRES_USER: ${POSTGRES_USER:-agrisure_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agrisure_secure_password_2026}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agrisure_user} -d ${POSTGRES_DB:-agrisure_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: agrisure_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: agrisure_web
+    restart: always
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn agrisure.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 60"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - media_volume:/app/media
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-production-deploy-key-agrisure-2026}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,web}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-agrisure_user}:${POSTGRES_PASSWORD:-agrisure_secure_password_2026}@db:5432/${POSTGRES_DB:-agrisure_db}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    container_name: agrisure_worker
+    restart: always
+    command: celery -A agrisure worker -l info --concurrency 2
+    volumes:
+      - .:/app
+      - media_volume:/app/media
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-production-deploy-key-agrisure-2026}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-agrisure_user}:${POSTGRES_PASSWORD:-agrisure_secure_password_2026}@db:5432/${POSTGRES_DB:-agrisure_db}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_volume:

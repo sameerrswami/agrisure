@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-gradient pt-16 pb-24 md:pt-24 md:pb-32 px-4 sm:px-6 lg:px-8 border-b border-emerald-100">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div class="lg:col-span-7 space-y-6">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs font-semibold uppercase tracking-wider">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                    India's Contract Farming Assurance Platform
+                </div>
+                
+                <h1 class="font-heading text-4xl sm:text-5xl lg:text-6xl font-extrabold text-forest-900 tracking-tight leading-[1.15]">
+                    Grow with Confidence.<br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-700">Sell with Assurance.</span>
+                </h1>
+
+                <p class="text-lg sm:text-xl text-gray-600 max-w-2xl leading-relaxed">
+                    Connect directly with verified corporate food processors, exporters, and wholesale buyers. Lock in pre-harvest prices, secure transparent contracts, and eliminate market volatility with guaranteed payments.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                    <a href="{% url 'accounts:register_farmer' %}" class="btn btn-primary btn-lg flex items-center justify-center gap-2.5">
+                        <i data-lucide="wheat" class="w-5 h-5"></i>
+                        <span>Register as Farmer</span>
+                    </a>
+                    <a href="{% url 'accounts:register_buyer' %}" class="btn btn-secondary btn-lg flex items-center justify-center gap-2.5">
+                        <i data-lucide="building" class="w-5 h-5"></i>
+                        <span>Register as Buyer</span>
+                    </a>
+                    <a href="{% url 'marketplace:index' %}" class="btn btn-outline btn-lg flex items-center justify-center gap-2">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                        <span>Explore Marketplace</span>
+                    </a>
+                </div>
+
+                <!-- Live Platform Statistics -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-emerald-200/60">
+                    <div class="p-3">
+                        <div class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading" data-counter="{{ stats.farmers_count }}" data-suffix="+">
+                            {{ stats.farmers_count }}+
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium mt-1">Verified Farmers</div>
+                    </div>
+                    <div class="p-3">
+                        <div class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading" data-counter="{{ stats.buyers_count }}" data-suffix="+">
+                            {{ stats.buyers_count }}+
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium mt-1">Corporate Buyers</div>
+                    </div>
+                    <div class="p-3">
+                        <div class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading" data-counter="50" data-prefix="₹" data-suffix="Cr+">
+                            ₹50Cr+
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium mt-1">Contract Value</div>
+                    </div>
+                    <div class="p-3">
+                        <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 font-heading">
+                            98.7%
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium mt-1">Fulfillment Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Glass Visual Card -->
+            <div class="lg:col-span-5">
+                <div class="relative">
+                    <div class="absolute -inset-2 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-3xl blur-2xl opacity-20 animate-pulse"></div>
+                    <div class="glass-card p-6 sm:p-8 bg-white/80 border border-white rounded-3xl shadow-2xl relative space-y-6">
+                        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                    <i data-lucide="file-check-2" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Active Contract</div>
+                                    <div class="text-base font-bold text-gray-900">AGR-202611-74892</div>
+                                </div>
+                            </div>
+                            <span class="badge badge-success">Guaranteed</span>
+                        </div>
+
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center text-gray-600">
+                                <span>Produce:</span>
+                                <span class="font-semibold text-gray-900">Organic Basmati Paddy (1121)</span>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-600">
+                                <span>Quantity:</span>
+                                <span class="font-semibold text-gray-900">100 Quintals</span>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-600">
+                                <span>Locked Pre-Harvest Price:</span>
+                                <span class="font-bold text-emerald-700 text-base">₹ 3,450 / Quintal</span>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-600">
+                                <span>Total Value:</span>
+                                <span class="font-extrabold text-gray-900 text-lg">₹ 3,45,000</span>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-600">
+                                <span>Advance Deposited:</span>
+                                <span class="font-semibold text-emerald-600">20% in AgriSure Escrow</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
+                            <i data-lucide="shield-check" class="w-6 h-6 text-emerald-600 flex-shrink-0"></i>
+                            <div class="text-xs text-emerald-900">
+                                <b>Legal Protection:</b> Fully compliant agreement drafted per Model Contract Farming Act standards.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                Transparent 4-Step Process
+            </span>
+            <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-forest-900 mt-3">
+                How AgriSure Protects Farmers & Buyers
+            </h2>
+            <p class="text-gray-600 mt-3 text-base">
+                From initial crop listing to final delivery and payment settlement, every milestone is structured, verified, and legally documented.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="glass-card p-6 bg-[#fafaf7] hover:bg-emerald-50/40 rounded-2xl border border-gray-100 text-center space-y-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/30 font-heading font-extrabold text-xl">
+                    1
+                </div>
+                <h3 class="font-heading font-bold text-lg text-gray-900">List or Discover Crops</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Farmers post upcoming harvest details with expected pricing and quantity. Buyers filter listings by location, quality grade, and harvest timeline.
+                </p>
+            </div>
+
+            <div class="glass-card p-6 bg-[#fafaf7] hover:bg-emerald-50/40 rounded-2xl border border-gray-100 text-center space-y-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/30 font-heading font-extrabold text-xl">
+                    2
+                </div>
+                <h3 class="font-heading font-bold text-lg text-gray-900">Two-Way Negotiation</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Parties exchange transparent counter-offers, agree on quality specifications, delivery conditions, and fair contract rates without middlemen.
+                </p>
+            </div>
+
+            <div class="glass-card p-6 bg-[#fafaf7] hover:bg-emerald-50/40 rounded-2xl border border-gray-100 text-center space-y-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/30 font-heading font-extrabold text-xl">
+                    3
+                </div>
+                <h3 class="font-heading font-bold text-lg text-gray-900">Digital Acceptance & Escrow</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Formal bilingual PDF contract is generated. Both parties accept the terms digitally, and the buyer deposits advance into secured escrow.
+                </p>
+            </div>
+
+            <div class="glass-card p-6 bg-[#fafaf7] hover:bg-emerald-50/40 rounded-2xl border border-gray-100 text-center space-y-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/30 font-heading font-extrabold text-xl">
+                    4
+                </div>
+                <h3 class="font-heading font-bold text-lg text-gray-900">Delivery & Guaranteed Payout</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Track harvest progress and transportation. Upon buyer delivery verification, funds are instantly transferred directly to the farmer's bank.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Crop Categories -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 bg-[#fafaf7]">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+            <div>
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest bg-emerald-100/70 px-3 py-1 rounded-full">
+                    Sourcing Categories
+                </span>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-forest-900 mt-2">
+                    High-Demand Contract Crops
+                </h2>
+            </div>
+            <a href="{% url 'marketplace:index' %}" class="mt-4 md:mt-0 text-emerald-700 font-bold hover:text-emerald-800 flex items-center gap-1.5 text-sm">
+                <span>View All Marketplace Crops</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+            {% for cat in categories %}
+            <a href="{% url 'marketplace:index' %}?category={{ cat.slug }}" class="glass-card p-5 bg-white text-center rounded-2xl border border-gray-200/60 hover:border-emerald-400 group transition-all">
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-3 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <i data-lucide="{{ cat.icon|default:'sprout' }}" class="w-6 h-6"></i>
+                </div>
+                <div class="font-heading font-bold text-sm text-gray-900 group-hover:text-emerald-700">{{ cat.name }}</div>
+                <div class="text-xs text-gray-400 mt-1">Active Contracts</div>
+            </a>
+            {% empty %}
+            <!-- Default mock categories if DB empty -->
+            <a href="{% url 'marketplace:index' %}" class="glass-card p-5 bg-white text-center rounded-2xl">
+                <div class="text-3xl mb-2">🌾</div>
+                <div class="font-heading font-bold text-sm">Grains & Cereals</div>
+            </a>
+            <a href="{% url 'marketplace:index' %}" class="glass-card p-5 bg-white text-center rounded-2xl">
+                <div class="text-3xl mb-2">🌱</div>
+                <div class="font-heading font-bold text-sm">Pulses & Lentils</div>
+            </a>
+            <a href="{% url 'marketplace:index' %}" class="glass-card p-5 bg-white text-center rounded-2xl">
+                <div class="text-3xl mb-2">🌶️</div>
+                <div class="font-heading font-bold text-sm">Spices & Condiments</div>
+            </a>
+            <a href="{% url 'marketplace:index' %}" class="glass-card p-5 bg-white text-center rounded-2xl">
+                <div class="text-3xl mb-2">🛢️</div>
+                <div class="font-heading font-bold text-sm">Oilseeds</div>
+            </a>
+            <a href="{% url 'marketplace:index' %}" class="glass-card p-5 bg-white text-center rounded-2xl">
+                <div class="text-3xl mb-2">🥦</div>
+                <div class="font-heading font-bold text-sm">Vegetables</div>
+            </a>
+            <a href="{% url 'marketplace:index' %}" class="glass-card p-5 bg-white text-center rounded-2xl">
+                <div class="text-3xl mb-2">🍎</div>
+                <div class="font-heading font-bold text-sm">Horticulture</div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Dual Benefits: Farmers vs Buyers -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 bg-white border-y border-gray-100">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Farmer Benefits -->
+            <div class="glass-card p-8 bg-gradient-to-br from-emerald-50/50 to-white rounded-3xl border border-emerald-100 space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center">
+                        <i data-lucide="shield" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">Built for Farmers</span>
+                        <h3 class="font-heading text-2xl font-bold text-forest-900">Why Farmers Trust AgriSure</h3>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <i data-lucide="badge-check" class="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Guaranteed Pre-Harvest Pricing</h4>
+                            <p class="text-sm text-gray-600">Shield your farm from sudden market crashes. Know your assured revenue before sowing.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <i data-lucide="badge-check" class="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Zero Middlemen & Commission Cuts</h4>
+                            <p class="text-sm text-gray-600">Sell directly to leading mills, food brands, and exporters. Keep 100% of your earnings.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <i data-lucide="badge-check" class="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Advance Escrow Deposits</h4>
+                            <p class="text-sm text-gray-600">Buyers deposit upfront capital into verified escrow accounts, preventing payment defaults.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{% url 'accounts:register_farmer' %}" class="btn btn-primary w-full py-3">
+                    Register as a Farmer
+                </a>
+            </div>
+
+            <!-- Buyer Benefits -->
+            <div class="glass-card p-8 bg-gradient-to-br from-teal-50/50 to-white rounded-3xl border border-teal-100 space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-teal-700 text-white flex items-center justify-center">
+                        <i data-lucide="truck" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-teal-700 uppercase tracking-widest">Built for Institutional Buyers</span>
+                        <h3 class="font-heading text-2xl font-bold text-forest-900">Why Buyers Choose AgriSure</h3>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <i data-lucide="badge-check" class="w-6 h-6 text-teal-600 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Traceable & Verified Producers</h4>
+                            <p class="text-sm text-gray-600">Inspect verified land titles, Aadhar credentials, and organic certificates with zero risk.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <i data-lucide="badge-check" class="w-6 h-6 text-teal-600 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Strict Quality Benchmark Enforcement</h4>
+                            <p class="text-sm text-gray-600">Standardized moisture, impurity, and size grades stipulated directly into enforceable legal contracts.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <i data-lucide="badge-check" class="w-6 h-6 text-teal-600 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Consistent Supply Chain Logistics</h4>
+                            <p class="text-sm text-gray-600">Lock multi-tonnage requirements across states with dispatch tracking and delivery milestones.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{% url 'accounts:register_buyer' %}" class="btn btn-secondary w-full py-3 border-teal-300 text-teal-800">
+                    Register as a Buyer
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Accordion -->
+<section class="py-20 px-4 sm:px-6 lg:px-8 bg-[#fafaf7]">
+    <div class="max-w-4xl mx-auto" x-data="{ active: null }">
+        <div class="text-center mb-12">
+            <h2 class="font-heading text-3xl font-extrabold text-forest-900">
+                Frequently Asked Questions
+            </h2>
+            <p class="text-gray-600 mt-2 text-sm">Everything you need to know about contract farming on AgriSure.</p>
+        </div>
+
+        <div class="space-y-4">
+            <div class="glass-card bg-white p-5 rounded-2xl border border-gray-200">
+                <button @click="active = active === 1 ? null : 1" class="w-full flex justify-between items-center text-left font-heading font-bold text-gray-900">
+                    <span>What happens if crop prices fall or rise after signing the contract?</span>
+                    <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform" :class="{ 'rotate-180': active === 1 }"></i>
+                </button>
+                <div x-show="active === 1" x-collapse class="mt-3 text-sm text-gray-600 border-t border-gray-100 pt-3 leading-relaxed">
+                    The agreed contract price is legally binding on both parties irrespective of open market fluctuations. This provides total income assurance to the farmer and predictable procurement costs to the buyer.
+                </div>
+            </div>
+
+            <div class="glass-card bg-white p-5 rounded-2xl border border-gray-200">
+                <button @click="active = active === 2 ? null : 2" class="w-full flex justify-between items-center text-left font-heading font-bold text-gray-900">
+                    <span>How does AgriSure protect farmer payments?</span>
+                    <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform" :class="{ 'rotate-180': active === 2 }"></i>
+                </button>
+                <div x-show="active === 2" x-collapse class="mt-3 text-sm text-gray-600 border-t border-gray-100 pt-3 leading-relaxed">
+                    Buyers are required to deposit advance payment into AgriSure's escrow account when the contract is activated. The remaining funds are settled promptly upon delivery verification.
+                </div>
+            </div>
+
+            <div class="glass-card bg-white p-5 rounded-2xl border border-gray-200">
+                <button @click="active = active === 3 ? null : 3" class="w-full flex justify-between items-center text-left font-heading font-bold text-gray-900">
+                    <span>What if there is a dispute regarding crop quality on arrival?</span>
+                    <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform" :class="{ 'rotate-180': active === 3 }"></i>
+                </button>
+                <div x-show="active === 3" x-collapse class="mt-3 text-sm text-gray-600 border-t border-gray-100 pt-3 leading-relaxed">
+                    Our platform includes a structured dispute resolution workflow where both parties submit weighing slips, lab quality reports, and photos. Our mediation team reviews the evidence against stipulated contract specifications.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

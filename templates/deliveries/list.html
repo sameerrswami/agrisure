@@ -1,0 +1,147 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Shipments & Deliveries – AgriSure{% endblock %}
+{% block dashboard_title %}Delivery Management & Tracking{% endblock %}
+{% block sidebar_menu %}
+    {% if user.is_farmer %}
+        {% include 'layouts/farmer_sidebar.html' %}
+    {% elif user.is_buyer %}
+        {% include 'layouts/buyer_sidebar.html' %}
+    {% else %}
+        {% include 'layouts/admin_sidebar.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Stat Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-forest-50 text-forest-700 flex items-center justify-center font-bold">
+                <i data-lucide="truck" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <span class="text-xs text-gray-500 font-medium">Total Shipments</span>
+                <div class="font-heading font-extrabold text-2xl text-gray-900">{{ total_count }}</div>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                <i data-lucide="navigation" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <span class="text-xs text-gray-500 font-medium">In Transit / Dispatched</span>
+                <div class="font-heading font-bold text-2xl text-amber-700">{{ in_transit_count }}</div>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                <i data-lucide="check-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <span class="text-xs text-gray-500 font-medium">Delivered & Verified</span>
+                <div class="font-heading font-bold text-2xl text-emerald-700">{{ delivered_count }}</div>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+                <i data-lucide="clock" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <span class="text-xs text-gray-500 font-medium">Pending Dispatch</span>
+                <div class="font-heading font-bold text-2xl text-blue-700">{{ pending_dispatch_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deliveries Table -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div>
+                <h3 class="font-heading font-bold text-lg text-gray-900">Shipment Consignments</h3>
+                <p class="text-xs text-gray-500">Multi-shipment tracking with inspection & proof-of-delivery receipts</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="data-table w-full text-left">
+                <thead>
+                    <tr class="bg-gray-50/70 border-b border-gray-100 text-xs text-gray-500">
+                        <th class="p-4">Tracking Number</th>
+                        <th class="p-4">Contract</th>
+                        <th class="p-4">Crop Produce</th>
+                        <th class="p-4">Quantity (Sched / Delv)</th>
+                        <th class="p-4">Transport Info</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4">Est. Date</th>
+                        <th class="p-4 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-xs">
+                    {% for d in deliveries %}
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="p-4">
+                            <span class="font-mono font-bold text-emerald-800 block">{{ d.tracking_number }}</span>
+                        </td>
+                        <td class="p-4">
+                            <a href="{% url 'contracts:detail' d.contract.pk %}" class="text-emerald-700 font-semibold hover:underline">
+                                #{{ d.contract.contract_number }}
+                            </a>
+                        </td>
+                        <td class="p-4">
+                            <span class="font-semibold text-gray-900">{{ d.contract.crop_listing.title }}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="font-bold text-gray-900">{{ d.quantity_scheduled }} {{ d.unit }}</span>
+                            {% if d.quantity_delivered is not None %}
+                                <span class="block text-[11px] text-emerald-700 font-semibold">Delivered: {{ d.quantity_delivered }} {{ d.unit }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            {% if d.vehicle_number or d.transporter_name %}
+                                <span class="font-medium text-gray-800">{{ d.transporter_name|default:"Logistics" }}</span>
+                                <span class="block text-[11px] font-mono text-gray-500">{{ d.vehicle_number }}</span>
+                            {% else %}
+                                <span class="text-gray-400 italic">Not Assigned</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            {% if d.status == 'DELIVERED' or d.status == 'CONFIRMED' %}
+                                <span class="badge badge-success text-[10px]">Delivered</span>
+                            {% elif d.status == 'DISPATCHED' or d.status == 'SHIPPED' or d.status == 'IN_TRANSIT' %}
+                                <span class="badge badge-info text-[10px]">In Transit</span>
+                            {% elif d.status == 'PARTIALLY_DELIVERED' %}
+                                <span class="badge text-[10px] bg-amber-100 text-amber-800">Partially Delivered</span>
+                            {% elif d.status == 'FAILED' or d.status == 'REJECTED' %}
+                                <span class="badge badge-danger text-[10px]">Rejected / Failed</span>
+                            {% else %}
+                                <span class="badge badge-warning text-[10px]">Scheduled</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 text-gray-500">
+                            {{ d.estimated_delivery_date|date:"d M Y" }}
+                        </td>
+                        <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                            <a href="{% url 'deliveries:detail' d.pk %}" class="btn btn-secondary py-1.5 px-3 text-[11px]">
+                                Track
+                            </a>
+                            {% if user == d.contract.buyer and d.status == 'DISPATCHED' or user == d.contract.buyer and d.status == 'SHIPPED' %}
+                            <a href="{% url 'deliveries:detail' d.pk %}" class="btn btn-primary py-1.5 px-3 text-[11px]">
+                                Verify & Confirm
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="p-12 text-center text-sm text-gray-400">
+                            <i data-lucide="package-open" class="w-12 h-12 mx-auto mb-2 text-gray-300"></i>
+                            No shipment records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block body_content %}
+<div class="min-h-screen flex bg-[#f8faf7]" x-data="{ sidebarOpen: false }">
+    <!-- Mobile Sidebar Backdrop -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition.opacity class="fixed inset-0 z-40 bg-gray-900/40 backdrop-blur-sm lg:hidden"></div>
+
+    <!-- Sidebar Container -->
+    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 w-64 bg-white/95 backdrop-blur-xl border-r border-gray-200/80 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:h-screen lg:flex lg:flex-col shadow-xl lg:shadow-none">
+        <!-- Brand -->
+        <div class="h-18 px-6 flex items-center justify-between border-b border-gray-100">
+            <a href="{% url 'core:home' %}" class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-md shadow-emerald-600/20">
+                    <i data-lucide="sprout" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-heading font-extrabold text-xl tracking-tight text-forest-900">Agri<span class="text-emerald-600">Sure</span></span>
+                </div>
+            </a>
+            <button @click="sidebarOpen = false" class="lg:hidden text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <div class="flex-1 overflow-y-auto px-4 py-5 space-y-1">
+            {% block sidebar_menu %}{% endblock %}
+        </div>
+
+        <!-- User Quick Card at Bottom -->
+        <div class="p-4 border-t border-gray-100 bg-gray-50/50">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-sm">
+                    {{ user.first_name|first }}{{ user.last_name|first }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-gray-900 truncate">{{ user.get_full_name }}</p>
+                    <p class="text-[11px] text-emerald-700 font-semibold">{{ user.get_role_display }}</p>
+                </div>
+                <a href="{% url 'accounts:logout' %}" class="text-gray-400 hover:text-rose-600 p-1" title="Log Out">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <!-- Top Sticky Header -->
+        <header class="h-18 bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <h1 class="font-heading font-extrabold text-xl text-forest-900">
+                    {% block dashboard_title %}Dashboard{% endblock %}
+                </h1>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-4">
+                <a href="{% url 'marketplace:index' %}" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
+                    <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+                    <span>Marketplace</span>
+                </a>
+
+                <!-- Notification Bell -->
+                <a href="{% url 'notifications:list' %}" class="relative p-2 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+                </a>
+
+                <!-- Messages Bell -->
+                <a href="{% url 'messaging:inbox' %}" class="p-2 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                    <i data-lucide="mail" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Body Scroll Container -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-8">
+            {% block dashboard_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

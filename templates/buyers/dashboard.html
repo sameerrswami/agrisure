@@ -1,0 +1,382 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Buyer Dashboard – AgriSure{% endblock %}
+{% block dashboard_title %}Procurement Command Center{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'layouts/buyer_sidebar.html' %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-8 max-w-7xl mx-auto">
+    <!-- Welcome Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-teal-900 via-forest-900 to-forest-950 p-6 sm:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+        <div class="space-y-2 z-10">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold uppercase tracking-widest text-teal-300 bg-white/10 px-3 py-1 rounded-full">
+                    Institutional Buyer Portal
+                </span>
+                {% if user.buyer_profile.is_verified %}
+                    <span class="text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Verified Entity
+                    </span>
+                {% else %}
+                    <span class="text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <i data-lucide="shield" class="w-3.5 h-3.5"></i> Corporate Account
+                    </span>
+                {% endif %}
+            </div>
+            <h2 class="font-heading text-2xl sm:text-3xl font-extrabold">Welcome, {{ user.get_full_name }}!</h2>
+            <p class="text-sm text-teal-100 max-w-xl">
+                Source direct farm harvests, execute forward-contract agreements, and manage secured escrow disbursements.
+            </p>
+        </div>
+        <div class="z-10 flex flex-wrap gap-3">
+            <a href="{% url 'marketplace:index' %}" class="btn btn-primary bg-emerald-500 hover:bg-emerald-400 text-forest-900 border-none font-bold py-2.5 px-4 shadow-lg flex items-center gap-1.5">
+                <i data-lucide="search" class="w-4 h-4"></i>
+                <span>Explore Produce Catalog</span>
+            </a>
+            <a href="{% url 'buyers:wishlist' %}" class="btn btn-secondary bg-white/20 hover:bg-white/30 text-white border-white/20 py-2.5 px-4 flex items-center gap-1.5">
+                <i data-lucide="heart" class="w-4 h-4"></i>
+                <span>Saved Crops ({{ metrics.saved_crops|length }})</span>
+            </a>
+            <a href="{% url 'buyers:profile' %}" class="btn btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 py-2.5 px-4 flex items-center gap-1.5">
+                <i data-lucide="building" class="w-4 h-4"></i>
+                <span>Company Profile</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 6 Real DB Metric Cards (Prompt 2 Section 4) -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- 1. Total Purchases -->
+        <div class="glass-card p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between text-gray-400 mb-1">
+                <span class="text-[11px] font-semibold uppercase tracking-wider">Total Purchases</span>
+                <i data-lucide="shopping-bag" class="w-3.5 h-3.5 text-forest-700"></i>
+            </div>
+            <div class="font-heading text-2xl font-extrabold text-forest-900">{{ metrics.total_purchases }}</div>
+            <div class="text-[10px] text-gray-400 mt-1">Completed contracts</div>
+        </div>
+
+        <!-- 2. Active Contracts -->
+        <div class="glass-card p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between text-teal-600 mb-1">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Active Contracts</span>
+                <i data-lucide="file-check" class="w-3.5 h-3.5 text-teal-600"></i>
+            </div>
+            <div class="font-heading text-2xl font-extrabold text-teal-700">{{ metrics.active_contracts }}</div>
+            <div class="text-[10px] text-teal-700 font-semibold mt-1">Under execution</div>
+        </div>
+
+        <!-- 3. Pending Requests -->
+        <div class="glass-card p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between text-amber-500 mb-1">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Pending Requests</span>
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500"></i>
+            </div>
+            <div class="font-heading text-2xl font-extrabold text-amber-600">{{ metrics.pending_requests }}</div>
+            <div class="text-[10px] text-gray-400 mt-1">Awaiting farmer sign</div>
+        </div>
+
+        <!-- 4. Completed Contracts -->
+        <div class="glass-card p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between text-emerald-600 mb-1">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Completed</span>
+                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
+            </div>
+            <div class="font-heading text-2xl font-extrabold text-emerald-700">{{ metrics.completed_contracts }}</div>
+            <div class="text-[10px] text-gray-400 mt-1">Delivered & settled</div>
+        </div>
+
+        <!-- 5. Total Purchase Value -->
+        <div class="glass-card p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between text-forest-700 mb-1">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Total Value</span>
+                <i data-lucide="indian-rupee" class="w-3.5 h-3.5 text-forest-700"></i>
+            </div>
+            <div class="font-heading text-xl font-extrabold text-forest-900">₹{{ metrics.total_purchase_value|floatformat:0 }}</div>
+            <div class="text-[10px] text-gray-400 mt-1">Contracted expenditure</div>
+        </div>
+
+        <!-- 6. Outstanding Escrow / In Escrow -->
+        <div class="glass-card p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between text-blue-600 mb-1">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">In Escrow</span>
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-blue-600"></i>
+            </div>
+            <div class="font-heading text-xl font-extrabold text-blue-700">₹{{ metrics.outstanding_payments|floatformat:0 }}</div>
+            <div class="text-[10px] text-gray-400 mt-1">Secured pending delivery</div>
+        </div>
+    </div>
+
+    <!-- Section: Farmer Recommendations (matching preferred crops/locations) -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="font-heading font-bold text-xl text-forest-900 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-amber-500"></i>
+                    <span>Tailored Farm Recommendations</span>
+                </h3>
+                <p class="text-xs text-gray-500">Curated specifically based on your preferred crop commodities & sourcing regions</p>
+            </div>
+            <a href="{% url 'marketplace:index' %}" class="text-xs font-semibold text-teal-700 hover:underline">View All &rarr;</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for crop in metrics.recommended_crops %}
+            <div class="glass-card bg-white rounded-3xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-xl transition-shadow group">
+                <div class="h-44 bg-gray-100 relative overflow-hidden">
+                    {% if crop.featured_image %}
+                        <img src="{{ crop.featured_image.url }}" alt="{{ crop.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700">
+                            <i data-lucide="sprout" class="w-12 h-12"></i>
+                        </div>
+                    {% endif %}
+                    <span class="absolute top-3 right-3 badge badge-success text-[11px]">{{ crop.get_quality_grade_display }}</span>
+                    {% if crop.farmer.farmer_profile.is_verified %}
+                    <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
+                        <i data-lucide="badge-check" class="w-3 h-3 text-emerald-600"></i> Verified Farmer
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="text-[11px] font-bold text-teal-700 uppercase tracking-wider">{{ crop.category.name }}</div>
+                        <h4 class="font-heading font-bold text-base text-gray-900 mt-1 line-clamp-1 group-hover:text-emerald-700 transition-colors">{{ crop.title }}</h4>
+                        <div class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gray-400"></i>
+                            <span>{{ crop.district }}, {{ crop.state }}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-0.5">Farmer: <span class="font-semibold text-gray-800">{{ crop.farmer.get_full_name }}</span></div>
+                    </div>
+                    <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
+                        <div>
+                            <div class="text-[11px] text-gray-400">Stock: {{ crop.quantity_remaining }} {{ crop.unit }}</div>
+                            <div class="font-heading font-bold text-lg text-emerald-700">₹{{ crop.price_per_unit }} <span class="text-xs font-normal text-gray-400">/ {{ crop.unit }}</span></div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="{% url 'marketplace:crop_detail' crop.pk %}" class="btn btn-secondary text-xs py-2 px-3 font-semibold">
+                                View Details
+                            </a>
+                            <a href="{% url 'contracts:request' crop.pk %}" class="btn btn-primary text-xs py-2 px-3 font-semibold">
+                                Contract
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-8 text-center text-xs text-gray-400">
+                Update your preferred crops in your profile to see tailored recommendations!
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Section: Pending Negotiations & Upcoming Deliveries -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Pending Negotiations -->
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center">
+                        <i data-lucide="scale" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-forest-900">Pending Price Negotiations</h3>
+                </div>
+                <a href="{% url 'negotiations:list' %}" class="text-xs font-semibold text-teal-700 hover:underline">View All</a>
+            </div>
+            <div class="space-y-3">
+                {% for neg in metrics.pending_negotiations %}
+                <div class="p-3.5 bg-gray-50/80 hover:bg-teal-50/40 rounded-2xl border border-gray-100 flex items-center justify-between gap-3 transition-colors">
+                    <div>
+                        <div class="text-sm font-bold text-gray-900">{{ neg.crop_listing.title }}</div>
+                        <div class="text-xs text-gray-500">Farmer: <span class="font-semibold text-gray-800">{{ neg.farmer.get_full_name }}</span> • Current Offer: <span class="font-bold text-emerald-700">₹{{ neg.current_price }}/{{ neg.crop_listing.unit }}</span></div>
+                        <div class="text-[11px] text-gray-400">Last activity: {{ neg.updated_at|timesince }} ago</div>
+                    </div>
+                    <a href="{% url 'negotiations:thread' neg.pk %}" class="btn btn-secondary text-xs py-1.5 px-3">
+                        Counter Offer
+                    </a>
+                </div>
+                {% empty %}
+                <div class="py-8 text-center text-sm text-gray-400">
+                    No active negotiations open right now.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Upcoming Deliveries -->
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                        <i data-lucide="truck" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-forest-900">Upcoming Consignment Deliveries</h3>
+                </div>
+                <a href="{% url 'deliveries:list' %}" class="text-xs font-semibold text-teal-700 hover:underline">Track All</a>
+            </div>
+            <div class="space-y-3">
+                {% for c in metrics.upcoming_deliveries %}
+                <div class="p-3.5 bg-gray-50/80 rounded-2xl border border-gray-100 flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-sm font-bold text-gray-900">{{ c.title }}</div>
+                        <div class="text-xs text-gray-500">Farmer: {{ c.farmer.get_full_name }} • Scheduled: <span class="font-semibold text-teal-800">{{ c.delivery_date|date:"d M Y" }}</span></div>
+                        <div class="text-[11px] text-gray-400">{{ c.quantity }} {{ c.unit }} • Warehouse: {{ c.delivery_location|default:"Central Facility" }}</div>
+                    </div>
+                    <a href="{% url 'contracts:detail' c.pk %}" class="btn btn-secondary text-xs py-1.5 px-3">
+                        Consignment Details
+                    </a>
+                </div>
+                {% empty %}
+                <div class="py-8 text-center text-sm text-gray-400">
+                    No active delivery consignments scheduled.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Saved Crops (Wishlist) & Recently Viewed -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Saved Crops (Wishlist) -->
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                        <i data-lucide="heart" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-forest-900">Saved Crops / Wishlist</h3>
+                </div>
+                <a href="{% url 'buyers:wishlist' %}" class="text-xs font-semibold text-rose-600 hover:underline">Full Wishlist &rarr;</a>
+            </div>
+            <div class="space-y-3">
+                {% for sc in metrics.saved_crops %}
+                <div class="p-3 bg-gray-50/80 rounded-2xl border border-gray-100 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0">
+                            {% if sc.crop_listing.featured_image %}
+                                <img src="{{ sc.crop_listing.featured_image.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-gray-400"><i data-lucide="sprout" class="w-5 h-5"></i></div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-gray-900">{{ sc.crop_listing.title }}</div>
+                            <div class="text-[11px] text-gray-500">₹{{ sc.crop_listing.price_per_unit }}/{{ sc.crop_listing.unit }} • {{ sc.crop_listing.quantity_remaining }} {{ sc.crop_listing.unit }} remaining</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{% url 'marketplace:crop_detail' sc.crop_listing.pk %}" class="btn btn-secondary text-xs py-1 px-2.5">
+                            View
+                        </a>
+                        <a href="{% url 'buyers:toggle_wishlist' sc.crop_listing.pk %}" class="text-gray-400 hover:text-rose-600 text-xs p-1" title="Remove">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="py-8 text-center text-sm text-gray-400">
+                    Your wishlist is empty. Tap the heart icon on any crop listing to save it!
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recently Viewed Crops -->
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                        <i data-lucide="history" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-forest-900">Recently Viewed Crops</h3>
+                </div>
+                <a href="{% url 'marketplace:index' %}" class="text-xs font-semibold text-teal-700 hover:underline">Explore More</a>
+            </div>
+            <div class="space-y-3">
+                {% for c in metrics.recently_viewed %}
+                <div class="p-3 bg-gray-50/80 rounded-2xl border border-gray-100 flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold text-gray-900">{{ c.title }}</div>
+                        <div class="text-[11px] text-gray-500">{{ c.district }}, {{ c.state }} • ₹{{ c.price_per_unit }}/{{ c.unit }}</div>
+                    </div>
+                    <a href="{% url 'marketplace:crop_detail' c.pk %}" class="btn btn-secondary text-xs py-1 px-2.5">
+                        Inspect
+                    </a>
+                </div>
+                {% empty %}
+                <div class="py-8 text-center text-sm text-gray-400">
+                    Crops you browse in the marketplace will appear here for fast reference.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Recent Purchases & In-App Notifications -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Purchases -->
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-forest-900">Recent Completed Purchases</h3>
+                </div>
+                <a href="{% url 'contracts:list' %}" class="text-xs font-semibold text-teal-700 hover:underline">All Contracts</a>
+            </div>
+            <div class="space-y-3">
+                {% for p in metrics.recent_purchases %}
+                <div class="p-3 bg-gray-50/80 rounded-2xl border border-gray-100 flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold text-gray-900">{{ p.title }}</div>
+                        <div class="text-[11px] text-gray-500">Contract #{{ p.contract_number }} • ₹{{ p.total_amount|floatformat:0 }}</div>
+                        <div class="text-[10px] text-emerald-700 font-semibold mt-0.5">Farmer: {{ p.farmer.get_full_name }}</div>
+                    </div>
+                    <a href="{% url 'contracts:detail' p.pk %}" class="btn btn-secondary text-xs py-1 px-2.5">
+                        View Agreement
+                    </a>
+                </div>
+                {% empty %}
+                <div class="py-8 text-center text-sm text-gray-400">
+                    No completed purchases yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-base text-forest-900">Recent Notifications</h3>
+                </div>
+                <a href="{% url 'notifications:list' %}" class="text-xs font-semibold text-teal-700 hover:underline">All Alerts</a>
+            </div>
+            <div class="space-y-3">
+                {% for n in metrics.recent_notifications %}
+                <div class="p-2.5 bg-gray-50/80 rounded-xl border border-gray-100 flex items-start gap-3">
+                    <div class="w-2 h-2 rounded-full mt-1.5 {% if not n.is_read %}bg-teal-500{% else %}bg-gray-300{% endif %}"></div>
+                    <div class="flex-1">
+                        <div class="text-xs font-bold text-gray-900">{{ n.title }}</div>
+                        <p class="text-[11px] text-gray-600 line-clamp-1 mt-0.5">{{ n.message }}</p>
+                        <div class="text-[10px] text-gray-400 mt-0.5">{{ n.created_at|timesince }} ago</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="py-8 text-center text-sm text-gray-400">
+                    No new notifications.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Edit Procurement Profile – AgriSure{% endblock %}
+{% block dashboard_title %}Update Corporate Details{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'layouts/buyer_sidebar.html' %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="glass-card p-8 bg-white rounded-3xl border border-gray-200 shadow-xl space-y-6">
+        <div>
+            <h2 class="font-heading text-2xl font-bold text-forest-900">Corporate Procurement Profile</h2>
+            <p class="text-sm text-gray-500 mt-1">Configure your corporate legal identity and procurement preferences.</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            {% if form.errors %}
+            <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm">
+                Please correct the errors indicated below.
+                {{ form.errors }}
+            </div>
+            {% endif %}
+
+            <!-- Contact & Rep Details -->
+            <h3 class="font-heading font-bold text-base text-forest-900 border-b border-gray-100 pb-2">Procurement Representative</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="form-group">
+                    <label class="form-label">First Name *</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name *</label>
+                    {{ form.last_name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact Mobile *</label>
+                    {{ form.phone }}
+                </div>
+            </div>
+
+            <!-- Business Identity -->
+            <h3 class="font-heading font-bold text-base text-forest-900 border-b border-gray-100 pb-2 pt-2">Company Information</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="form-group sm:col-span-2">
+                    <label class="form-label">Company / Entity Legal Name *</label>
+                    {{ form.company_name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Business Structure *</label>
+                    {{ form.business_type }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Contact Person Designation</label>
+                    {{ form.contact_person }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GSTIN (Registration Number)</label>
+                    {{ form.gstin }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Corporate PAN Number</label>
+                    {{ form.pan_number }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Corporate Website</label>
+                    {{ form.website }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Company Logo</label>
+                    {{ form.company_logo }}
+                </div>
+            </div>
+
+            <!-- Addresses -->
+            <h3 class="font-heading font-bold text-base text-forest-900 border-b border-gray-100 pb-2 pt-2">Addresses & Warehousing</h3>
+            <div class="form-group">
+                <label class="form-label">Registered Corporate Office Address</label>
+                {{ form.business_address }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    {{ form.city }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">District</label>
+                    {{ form.district }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State</label>
+                    {{ form.state }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pincode</label>
+                    {{ form.pincode }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Default Warehouse Delivery Address (for contract consignments)</label>
+                {{ form.delivery_address }}
+            </div>
+
+            <!-- Procurement Parameters -->
+            <h3 class="font-heading font-bold text-base text-forest-900 border-b border-gray-100 pb-2 pt-2">Procurement Preferences (Matching Engine)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Preferred Crops (Comma-separated, e.g. Basmati Rice, Wheat, Soybean)</label>
+                    {{ form.preferred_crops }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Preferred Sourcing Locations (e.g. Punjab, Haryana, MP)</label>
+                    {{ form.preferred_locations }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Typical Required Quantities (e.g. 1000 Quintals/season)</label>
+                    {{ form.required_quantities }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Annual Procurement Budget (₹)</label>
+                    {{ form.annual_procurement_budget }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Corporate Bio / Procurement Scope</label>
+                {{ form.bio }}
+            </div>
+
+            <!-- Verification Document -->
+            <h3 class="font-heading font-bold text-base text-forest-900 border-b border-gray-100 pb-2 pt-2">KYC Document Upload</h3>
+            <div class="form-group">
+                <label class="form-label">Upload Certificate of Incorporation / GST Certificate / Trade License</label>
+                {{ form.verification_document }}
+                {% if profile.verification_document %}
+                <div class="text-xs text-gray-500 mt-1">Current document: <a href="{{ profile.verification_document.url }}" target="_blank" class="text-teal-700 underline">{{ profile.verification_document.name }}</a></div>
+                {% endif %}
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="btn btn-primary flex-1 py-3 text-base font-semibold">Save Profile & Preferences</button>
+                <a href="{% url 'buyers:profile' %}" class="btn btn-secondary px-6">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

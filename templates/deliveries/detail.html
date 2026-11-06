@@ -1,0 +1,240 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Shipment #{{ delivery.tracking_number }} – AgriSure{% endblock %}
+{% block dashboard_title %}Shipment Consignment Tracking{% endblock %}
+{% block sidebar_menu %}
+    {% if user.is_farmer %}
+        {% include 'layouts/farmer_sidebar.html' %}
+    {% elif user.is_buyer %}
+        {% include 'layouts/buyer_sidebar.html' %}
+    {% else %}
+        {% include 'layouts/admin_sidebar.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <!-- Top Action bar -->
+    <div class="flex items-center justify-between">
+        <a href="{% url 'deliveries:list' %}" class="btn btn-secondary py-2 px-4 text-xs inline-flex items-center gap-1.5">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Shipments
+        </a>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'contracts:detail' delivery.contract.pk %}" class="btn btn-secondary py-2 px-4 text-xs inline-flex items-center gap-1.5">
+                <i data-lucide="file-text" class="w-4 h-4"></i> View Contract #{{ delivery.contract.contract_number }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Tracking Card -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-forest-900 to-emerald-800 p-8 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <span class="text-xs uppercase tracking-wider text-emerald-300 font-semibold block">Consignment Tracking Reference</span>
+                <h2 class="font-heading text-2xl font-bold tracking-tight font-mono mt-0.5">{{ delivery.tracking_number }}</h2>
+                <p class="text-xs text-emerald-200 mt-1">
+                    Commodity: <span class="font-bold">{{ delivery.contract.crop_listing.title }}</span> • Contract #{{ delivery.contract.contract_number }}
+                </p>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-emerald-200 block">Scheduled Consignment</span>
+                <div class="font-heading font-extrabold text-3xl text-emerald-100">
+                    {{ delivery.quantity_scheduled }} <span class="text-lg font-normal">{{ delivery.unit }}</span>
+                </div>
+                <div class="mt-1">
+                    {% if delivery.status == 'DELIVERED' or delivery.status == 'CONFIRMED' %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-400 text-emerald-950">DELIVERED & VERIFIED</span>
+                    {% elif delivery.status == 'PARTIALLY_DELIVERED' %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-amber-950">PARTIALLY DELIVERED</span>
+                    {% elif delivery.status == 'DISPATCHED' or delivery.status == 'SHIPPED' or delivery.status == 'IN_TRANSIT' %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-400 text-blue-950">IN TRANSIT</span>
+                    {% elif delivery.status == 'FAILED' or delivery.status == 'REJECTED' %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-red-400 text-red-950">REJECTED / FAILED</span>
+                    {% else %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-yellow-400 text-yellow-950">SCHEDULED</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 space-y-8">
+            <!-- Consignment Details Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="text-gray-400 block mb-1">Carrier / Transporter</span>
+                    <span class="font-bold text-gray-900">{{ delivery.transporter_name|default:"Assigned by Farmer" }}</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="text-gray-400 block mb-1">Vehicle Registration</span>
+                    <span class="font-mono font-bold text-gray-900">{{ delivery.vehicle_number|default:"Pending Dispatch" }}</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="text-gray-400 block mb-1">Driver Details</span>
+                    <span class="font-semibold text-gray-900">{{ delivery.driver_name|default:"Driver" }} {% if delivery.driver_phone %}({{ delivery.driver_phone }}){% endif %}</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="text-gray-400 block mb-1">Est. Delivery Date</span>
+                    <span class="font-semibold text-gray-900">{{ delivery.estimated_delivery_date|date:"d M Y" }}</span>
+                </div>
+            </div>
+
+            <!-- Locations -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/50">
+                    <span class="text-emerald-800 font-bold uppercase tracking-wider block mb-1">Origin (Pickup Location)</span>
+                    <p class="text-gray-700 font-medium">{{ delivery.pickup_location }}</p>
+                    <span class="text-[11px] text-gray-400 block mt-1">Dispatched: {{ delivery.dispatched_at|date:"d M Y, H:i"|default:"Awaiting departure" }}</span>
+                </div>
+                <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/50">
+                    <span class="text-emerald-800 font-bold uppercase tracking-wider block mb-1">Destination Address</span>
+                    <p class="text-gray-700 font-medium">{{ delivery.destination_address }}</p>
+                    <span class="text-[11px] text-gray-400 block mt-1">Delivered: {{ delivery.delivered_at|date:"d M Y, H:i"|default:"In transit" }}</span>
+                </div>
+            </div>
+
+            <!-- Inspection & Proof of Delivery Card (If completed) -->
+            {% if delivery.quantity_delivered is not None or delivery.proof_of_delivery %}
+            <div class="p-6 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                        <i data-lucide="clipboard-check" class="w-4 h-4 text-emerald-700"></i> Buyer Delivery Verification & Inspection Results
+                    </h4>
+                    <span class="badge badge-success text-xs">{{ delivery.get_inspection_status_display }}</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-1">
+                    <div>
+                        <span class="text-gray-500 block">Verified Quantity Received:</span>
+                        <span class="font-bold text-emerald-800 text-base">{{ delivery.quantity_delivered }} {{ delivery.unit }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block">Inspection Date:</span>
+                        <span class="font-semibold text-gray-800">{{ delivery.actual_delivery_date|date:"d M Y" }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block">Proof of Delivery:</span>
+                        {% if delivery.proof_of_delivery %}
+                            <a href="{{ delivery.proof_of_delivery.url }}" target="_blank" class="text-emerald-700 font-semibold underline inline-flex items-center gap-1">
+                                <i data-lucide="file" class="w-3.5 h-3.5"></i> View Proof Attachment
+                            </a>
+                        {% else %}
+                            <span class="text-gray-400 italic">No document attached</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if delivery.inspection_notes %}
+                <div class="mt-2 text-xs text-gray-700 bg-white p-3 rounded-xl border border-emerald-100">
+                    <span class="font-semibold text-gray-900 block mb-0.5">Inspection Remarks:</span>
+                    {{ delivery.inspection_notes }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Farmer Dispatch Action Card -->
+            {% if can_dispatch %}
+            <div class="p-6 bg-blue-50 rounded-2xl border border-blue-200 space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-blue-950">Confirm Farmer Dispatch</h4>
+                        <p class="text-xs text-blue-800">Assign vehicle and driver to dispatch this shipment.</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{% url 'deliveries:dispatch' delivery.pk %}" class="space-y-4 pt-2">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label text-xs text-gray-700">Transporter / Agency *</label>
+                            {{ dispatch_form.transporter_name }}
+                        </div>
+                        <div>
+                            <label class="form-label text-xs text-gray-700">Vehicle Registration *</label>
+                            {{ dispatch_form.vehicle_number }}
+                        </div>
+                        <div>
+                            <label class="form-label text-xs text-gray-700">Driver Name</label>
+                            {{ dispatch_form.driver_name }}
+                        </div>
+                        <div>
+                            <label class="form-label text-xs text-gray-700">Driver Phone</label>
+                            {{ dispatch_form.driver_phone }}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary py-2.5 px-6 text-xs font-bold">
+                        Confirm Produce Dispatched
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Buyer Receipt & Inspection Action Card -->
+            {% if can_confirm %}
+            <div class="p-6 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
+                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-emerald-950">Confirm Arrival & Record Inspection</h4>
+                        <p class="text-xs text-emerald-800">Verify actual weight/quantity received, inspect quality, and attach Proof of Delivery.</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{% url 'deliveries:confirm' delivery.pk %}" enctype="multipart/form-data" class="space-y-4 pt-2">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label text-xs text-gray-700">Actual Quantity Received ({{ delivery.unit }}) *</label>
+                            <input type="number" step="0.01" name="quantity_delivered" value="{{ delivery.quantity_scheduled }}" class="form-input text-xs" required>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs text-gray-700">Inspection Status *</label>
+                            <select name="inspection_status" class="form-select text-xs">
+                                <option value="VERIFIED">Verified & Accepted</option>
+                                <option value="SHORTAGE">Quantity Shortage</option>
+                                <option value="DAMAGED">Damaged / Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label text-xs text-gray-700">Upload Proof of Delivery / Weighbridge Slip</label>
+                        <input type="file" name="proof_of_delivery" class="form-input text-xs">
+                    </div>
+                    <div>
+                        <label class="form-label text-xs text-gray-700">Inspection & Condition Remarks</label>
+                        <textarea name="inspection_notes" rows="2" class="form-input text-xs" placeholder="e.g. Moisture 12%, bags intact, accepted at warehouse gate 2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary py-2.5 px-6 text-xs font-bold">
+                        Confirm Receipt & Update Progress
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Timeline -->
+            <div class="space-y-3 pt-4 border-t border-gray-100">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-gray-700">Shipment Milestone Timeline</h4>
+                <div class="space-y-3">
+                    {% for up in timeline %}
+                    <div class="flex items-start gap-3 text-xs">
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-600 mt-1 flex-shrink-0"></div>
+                        <div class="flex-1">
+                            <span class="font-bold text-gray-900">{{ up.status }}</span>
+                            {% if up.location %}<span class="text-gray-400">@ {{ up.location }}</span>{% endif %}
+                            <p class="text-gray-600 mt-0.5">{{ up.note }}</p>
+                        </div>
+                        <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ up.timestamp|date:"d M, H:i" }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-gray-400 italic">No timeline entries yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

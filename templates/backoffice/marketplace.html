@@ -1,0 +1,205 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Marketplace & Content Management – AgriSure Backoffice{% endblock %}
+{% block dashboard_title %}Marketplace Governance & Crop Categories{% endblock %}
+{% block sidebar_menu %}{% include 'layouts/admin_sidebar.html' %}{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    <!-- Category Management Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Add Category Form -->
+        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
+            <h3 class="font-heading font-bold text-base text-gray-900 flex items-center gap-2">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i> Add Crop Category
+            </h3>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="create_category" value="1">
+                <div>
+                    <label class="form-label text-xs font-bold text-gray-700">Category Name *</label>
+                    {{ category_form.name }}
+                </div>
+                <div>
+                    <label class="form-label text-xs font-bold text-gray-700">Lucide Icon Name</label>
+                    {{ category_form.icon }}
+                </div>
+                <div>
+                    <label class="form-label text-xs font-bold text-gray-700">Description</label>
+                    {{ category_form.description }}
+                </div>
+                <div class="flex items-center gap-2 pt-1">
+                    {{ category_form.is_active }}
+                    <label class="text-xs text-gray-700 font-semibold">Active in Marketplace</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-full py-2.5 text-xs font-bold mt-2">
+                    Create Category
+                </button>
+            </form>
+        </div>
+
+        <!-- Categories List Grid -->
+        <div class="lg:col-span-2 bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h3 class="font-heading font-bold text-base text-gray-900">Supported Agricultural Categories</h3>
+                <span class="text-xs text-gray-500">{{ categories.count }} Categories Active</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto">
+                {% for cat in categories %}
+                <div class="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                            <i data-lucide="{{ cat.icon|default:'sprout' }}" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-gray-900 block">{{ cat.name }}</span>
+                            <span class="text-[11px] text-gray-400">{{ cat.listing_count }} Crop Listings</span>
+                        </div>
+                    </div>
+                    <div>
+                        {% if cat.is_active %}
+                            <span class="badge badge-success text-[10px]">Active</span>
+                        {% else %}
+                            <span class="badge badge-secondary text-[10px]">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-xs text-gray-400 italic">No categories created yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Reported Listings & Moderation Section -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+            <div>
+                <h3 class="font-heading font-bold text-base text-gray-900">Reported Crop Listings & Moderation</h3>
+                <p class="text-xs text-gray-500">Community reports regarding misleading pricing, poor quality claims, or inaccurate specifications</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="data-table w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500">
+                        <th class="p-3">Reported Listing</th>
+                        <th class="p-3">Reported By</th>
+                        <th class="p-3">Reason / Details</th>
+                        <th class="p-3">Date</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3 text-right">Moderation Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for rep in reported_listings %}
+                    <tr>
+                        <td class="p-3 font-bold text-gray-900">
+                            <a href="{% url 'marketplace:crop_detail' rep.crop_listing.pk %}" target="_blank" class="text-emerald-700 hover:underline">
+                                {{ rep.crop_listing.title }}
+                            </a>
+                        </td>
+                        <td class="p-3 text-gray-700">{{ rep.reported_by.get_full_name }}</td>
+                        <td class="p-3">
+                            <span class="font-bold block">{{ rep.reason }}</span>
+                            <span class="text-gray-500 text-[11px]">{{ rep.details }}</span>
+                        </td>
+                        <td class="p-3 text-gray-400">{{ rep.created_at|date:"d M Y" }}</td>
+                        <td class="p-3">
+                            {% if rep.is_resolved %}
+                                <span class="badge badge-success text-[10px]">Resolved</span>
+                            {% else %}
+                                <span class="badge badge-warning text-[10px]">Open Report</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 text-right space-x-2">
+                            <form method="POST" action="{% url 'backoffice:toggle_listing' rep.crop_listing.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary py-1 px-2.5 text-[11px] text-red-600">
+                                    Disable Listing
+                                </button>
+                            </form>
+                            {% if not rep.is_resolved %}
+                            <form method="POST" action="{% url 'backoffice:resolve_report' rep.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary py-1 px-2.5 text-[11px]">
+                                    Dismiss Report
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-gray-400 text-xs">
+                            No active listing reports. Quality standards are fully compliant!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Active Listings Directory & Quick Moderation -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
+        <h3 class="font-heading font-bold text-base text-gray-900">Recent Marketplace Crop Listings</h3>
+        <div class="overflow-x-auto">
+            <table class="data-table w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500">
+                        <th class="p-3">Crop Title</th>
+                        <th class="p-3">Category</th>
+                        <th class="p-3">Farmer</th>
+                        <th class="p-3">Available Quantity</th>
+                        <th class="p-3">Price / Unit</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for l in all_listings %}
+                    <tr>
+                        <td class="p-3 font-bold text-gray-900">
+                            <a href="{% url 'marketplace:crop_detail' l.pk %}" target="_blank" class="hover:text-emerald-700">
+                                {{ l.title }}
+                            </a>
+                        </td>
+                        <td class="p-3 text-gray-600">{{ l.category.name }}</td>
+                        <td class="p-3 font-medium text-gray-800">{{ l.farmer.get_full_name }}</td>
+                        <td class="p-3 font-semibold">{{ l.available_quantity }} {{ l.unit }}</td>
+                        <td class="p-3 font-bold text-emerald-800">₹{{ l.expected_price_per_unit }}/{{ l.unit }}</td>
+                        <td class="p-3">
+                            {% if l.status == 'ACTIVE' %}
+                                <span class="badge badge-success text-[10px]">Active</span>
+                            {% else %}
+                                <span class="badge badge-secondary text-[10px]">{{ l.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 text-right">
+                            <form method="POST" action="{% url 'backoffice:toggle_listing' l.id %}" class="inline">
+                                {% csrf_token %}
+                                {% if l.status == 'ACTIVE' %}
+                                    <button type="submit" class="btn btn-secondary py-1 px-2.5 text-[11px] text-red-600 hover:bg-red-50">
+                                        Disable
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-primary py-1 px-2.5 text-[11px] bg-emerald-700">
+                                        Reinstate
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-gray-400 text-xs">No crop listings found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

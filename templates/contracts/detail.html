@@ -1,0 +1,534 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Contract #{{ contract.contract_number }} (v{{ contract.version }}) – AgriSure{% endblock %}
+{% block dashboard_title %}Farming Agreement Dossier{% endblock %}
+
+{% block sidebar_menu %}
+    {% if user.is_farmer %}
+        {% include 'layouts/farmer_sidebar.html' %}
+    {% else %}
+        {% include 'layouts/buyer_sidebar.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-6xl mx-auto space-y-8" x-data="{ amendOpen: false, statusOpen: false, cancelOpen: false }">
+    <!-- Top Action Banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-white rounded-3xl border border-gray-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2 flex-wrap">
+                {% if contract.status == 'ACTIVE' %}
+                    <span class="badge badge-success flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Active & Legally Bound</span>
+                {% elif contract.status == 'PRODUCTION_IN_PROGRESS' %}
+                    <span class="badge badge-info flex items-center gap-1"><i data-lucide="sprout" class="w-3 h-3"></i> Production In Progress</span>
+                {% elif contract.status == 'READY_FOR_DELIVERY' %}
+                    <span class="badge badge-warning flex items-center gap-1"><i data-lucide="truck" class="w-3 h-3"></i> Ready for Delivery</span>
+                {% elif contract.status == 'COMPLETED' %}
+                    <span class="badge badge-success flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Completed & Settled</span>
+                {% elif contract.status == 'CANCELLED' %}
+                    <span class="badge badge-danger flex items-center gap-1"><i data-lucide="x-circle" class="w-3 h-3"></i> Cancelled</span>
+                {% else %}
+                    <span class="badge badge-warning">{{ contract.get_status_display }}</span>
+                {% endif %}
+                <span class="badge badge-neutral text-xs font-bold">Version v{{ contract.version }}</span>
+                <span class="text-xs text-gray-400">Created: {{ contract.created_at|date:"d M Y" }}</span>
+            </div>
+            <h2 class="font-heading text-2xl font-extrabold text-forest-900 mt-1">Contract #{{ contract.contract_number }}</h2>
+            <p class="text-xs text-gray-500 mt-0.5">
+                Agreement between <b>{{ contract.farmer.get_full_name }}</b> (Producer) and <b>{{ contract.buyer.get_full_name }}</b> (Purchaser) for <b>{{ contract.crop_listing.title }}</b>
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <a href="{% url 'contracts:pdf' contract.pk %}" class="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5" title="Download ReportLab Generated PDF">
+                <i data-lucide="download" class="w-4 h-4 text-emerald-700"></i>
+                <span>Download PDF Agreement</span>
+            </a>
+            
+            {% if is_buyer %}
+            <a href="{% url 'messaging:start' contract.farmer.id %}?contract_id={{ contract.id }}" class="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5">
+                <i data-lucide="message-square" class="w-4 h-4 text-teal-700"></i>
+                <span>Contract Chat</span>
+            </a>
+            {% else %}
+            <a href="{% url 'messaging:start' contract.buyer.id %}?contract_id={{ contract.id }}" class="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5">
+                <i data-lucide="message-square" class="w-4 h-4 text-teal-700"></i>
+                <span>Contract Chat</span>
+            </a>
+            {% endif %}
+
+            {% if contract.status != 'COMPLETED' and contract.status != 'CANCELLED' %}
+                <button type="button" @click="amendOpen = true" class="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 text-gray-700">
+                    <i data-lucide="git-pull-request" class="w-4 h-4"></i>
+                    <span>Propose Amendment</span>
+                </button>
+            {% endif %}
+
+            {% if is_farmer and contract.status in 'ACTIVE,PRODUCTION_IN_PROGRESS' %}
+                <button type="button" @click="statusOpen = true" class="btn btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5">
+                    <i data-lucide="activity" class="w-4 h-4"></i>
+                    <span>Update Production</span>
+                </button>
+            {% endif %}
+
+            {% if is_buyer and contract.status == 'READY_FOR_DELIVERY' %}
+                <button type="button" @click="statusOpen = true" class="btn btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5">
+                    <i data-lucide="check-check" class="w-4 h-4"></i>
+                    <span>Confirm Receipt</span>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Contract Lifecycle Visual Stepper (Prompt 3 Section 5) -->
+    <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-3">
+        <h3 class="font-heading font-bold text-xs uppercase tracking-wider text-gray-400">Contract Lifecycle Progression</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 pt-2 text-center text-xs">
+            <!-- Step 1: Draft / Request -->
+            <div class="p-2.5 rounded-2xl {% if contract.status != 'DRAFT' %}bg-emerald-50 text-emerald-800 font-bold border border-emerald-200{% else %}bg-amber-100 text-amber-900 font-bold{% endif %}">
+                <div class="flex items-center justify-center mb-1"><i data-lucide="file-text" class="w-4 h-4"></i></div>
+                <div>1. Request</div>
+            </div>
+            <!-- Step 2: Dual Approval -->
+            <div class="p-2.5 rounded-2xl {% if contract.is_fully_accepted %}bg-emerald-50 text-emerald-800 font-bold border border-emerald-200{% elif contract.status in 'PENDING_FARMER,PENDING_BUYER' %}bg-amber-100 text-amber-900 font-bold border border-amber-300 animate-pulse{% else %}bg-gray-50 text-gray-400{% endif %}">
+                <div class="flex items-center justify-center mb-1"><i data-lucide="shield-check" class="w-4 h-4"></i></div>
+                <div>2. Mutual Acceptance</div>
+            </div>
+            <!-- Step 3: Active Binding -->
+            <div class="p-2.5 rounded-2xl {% if contract.status in 'ACTIVE,PRODUCTION_IN_PROGRESS,READY_FOR_DELIVERY,PARTIALLY_DELIVERED,DELIVERED,COMPLETED' %}bg-emerald-50 text-emerald-800 font-bold border border-emerald-200{% else %}bg-gray-50 text-gray-400{% endif %}">
+                <div class="flex items-center justify-center mb-1"><i data-lucide="lock" class="w-4 h-4"></i></div>
+                <div>3. Active & Binding</div>
+            </div>
+            <!-- Step 4: Cultivation / Production -->
+            <div class="p-2.5 rounded-2xl {% if contract.status in 'PRODUCTION_IN_PROGRESS,READY_FOR_DELIVERY,PARTIALLY_DELIVERED,DELIVERED,COMPLETED' %}bg-emerald-50 text-emerald-800 font-bold border border-emerald-200{% else %}bg-gray-50 text-gray-400{% endif %}">
+                <div class="flex items-center justify-center mb-1"><i data-lucide="sprout" class="w-4 h-4"></i></div>
+                <div>4. Production</div>
+            </div>
+            <!-- Step 5: Ready / Dispatch -->
+            <div class="p-2.5 rounded-2xl {% if contract.status in 'READY_FOR_DELIVERY,PARTIALLY_DELIVERED,DELIVERED,COMPLETED' %}bg-emerald-50 text-emerald-800 font-bold border border-emerald-200{% else %}bg-gray-50 text-gray-400{% endif %}">
+                <div class="flex items-center justify-center mb-1"><i data-lucide="truck" class="w-4 h-4"></i></div>
+                <div>5. Delivery & Inspect</div>
+            </div>
+            <!-- Step 6: Completed -->
+            <div class="p-2.5 rounded-2xl {% if contract.status == 'COMPLETED' %}bg-emerald-600 text-white font-bold{% elif contract.status == 'CANCELLED' %}bg-rose-100 text-rose-800 font-bold{% else %}bg-gray-50 text-gray-400{% endif %}">
+                <div class="flex items-center justify-center mb-1"><i data-lucide="package-check" class="w-4 h-4"></i></div>
+                <div>6. Settled</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Digital Acceptance Panel (Prompt 3 Section 4) -->
+    <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
+            <div>
+                <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+                    <i data-lucide="signature" class="w-5 h-5 text-emerald-600"></i>
+                    <span>Digital Acceptance Status (Current Version: v{{ contract.version }})</span>
+                </h3>
+                <p class="text-xs text-gray-500">Both parties must record digital acceptance of Version {{ contract.version }} to activate binding enforcement.</p>
+            </div>
+            {% if contract.is_fully_accepted %}
+            <span class="badge badge-success text-xs font-bold flex items-center gap-1">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Bilaterally Accepted
+            </span>
+            {% else %}
+            <span class="badge badge-warning text-xs font-bold flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> Dual Acceptance Incomplete
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- 2 Parties Status Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <!-- Farmer Acceptance Card -->
+            <div class="p-4 rounded-2xl border {% if contract.farmer_accepted and contract.farmer_accepted_version == contract.version %}bg-emerald-50/70 border-emerald-200 text-emerald-900{% else %}bg-amber-50/60 border-amber-200 text-amber-900{% endif %}">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="font-bold text-sm">Producer / Farmer: {{ contract.farmer.get_full_name }}</span>
+                    {% if contract.farmer_accepted and contract.farmer_accepted_version == contract.version %}
+                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+                    {% else %}
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+                    {% endif %}
+                </div>
+                <div class="text-[11px] text-gray-600">
+                    {% if contract.farmer_accepted and contract.farmer_accepted_version == contract.version %}
+                        Accepted Version: <b>v{{ contract.farmer_accepted_version }}</b><br/>
+                        Recorded on: <b>{{ contract.farmer_accepted_at|date:"d M Y H:i:s" }} UTC</b>
+                    {% else %}
+                        <span class="text-amber-800 font-semibold">Pending Farmer Acceptance for v{{ contract.version }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Buyer Acceptance Card -->
+            <div class="p-4 rounded-2xl border {% if contract.buyer_accepted and contract.buyer_accepted_version == contract.version %}bg-emerald-50/70 border-emerald-200 text-emerald-900{% else %}bg-amber-50/60 border-amber-200 text-amber-900{% endif %}">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="font-bold text-sm">Purchaser / Buyer: {{ contract.buyer.get_full_name }}</span>
+                    {% if contract.buyer_accepted and contract.buyer_accepted_version == contract.version %}
+                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+                    {% else %}
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+                    {% endif %}
+                </div>
+                <div class="text-[11px] text-gray-600">
+                    {% if contract.buyer_accepted and contract.buyer_accepted_version == contract.version %}
+                        Accepted Version: <b>v{{ contract.buyer_accepted_version }}</b><br/>
+                        Recorded on: <b>{{ contract.buyer_accepted_at|date:"d M Y H:i:s" }} UTC</b>
+                    {% else %}
+                        <span class="text-amber-800 font-semibold">Pending Buyer Acceptance for v{{ contract.version }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Acceptance Action Box if Current User Has Not Accepted Current Version -->
+        {% if not user_accepted_current and contract.status != 'CANCELLED' and contract.status != 'COMPLETED' %}
+        <form method="post" action="{% url 'contracts:accept' contract.pk %}" class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-3">
+            {% csrf_token %}
+            <div class="flex items-start gap-2.5">
+                <input type="checkbox" id="accept_disclaimer" name="disclaimer_acknowledged" required class="mt-1 rounded text-emerald-600 focus:ring-emerald-500">
+                <label for="accept_disclaimer" class="text-xs text-gray-700 leading-relaxed cursor-pointer">
+                    <b>Digital Acceptance Acknowledgement:</b> I confirm that I have reviewed the produce specifications, delivery schedule, payment conditions, and penalty clauses of Contract <b>#{{ contract.contract_number }} (v{{ contract.version }})</b>. I agree to bind my registered entity to these terms under the Information Technology Act.
+                </label>
+            </div>
+            <div class="flex items-center gap-3 pt-1">
+                <button type="submit" class="btn btn-primary text-xs py-2 px-4 font-bold flex items-center gap-1.5 shadow">
+                    <i data-lucide="file-check" class="w-4 h-4"></i>
+                    <span>Record Digital Acceptance (v{{ contract.version }})</span>
+                </button>
+                <button type="button" @click="cancelOpen = true" class="btn btn-secondary text-xs py-2 px-3 text-rose-600 hover:bg-rose-50 border-rose-200">
+                    Decline Contract
+                </button>
+            </div>
+        </form>
+        {% endif %}
+
+        <!-- Compliance Disclaimer Notice (Prompt 3 Section 4) -->
+        <div class="p-3 bg-gray-50 rounded-xl text-[11px] text-gray-500 flex items-start gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5"></i>
+            <span>
+                <b>Statutory Notice:</b> AgriSure records mutual electronic acceptance and cryptographically timestamps IP address and version records. This serves as platform-recorded mutual electronic consent under Section 10A of the IT Act, distinct from third-party PKI hardware token certificates.
+            </span>
+        </div>
+    </div>
+
+    <!-- Commercial Terms & Produce Specifications -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 4-Box Commercials -->
+        <div class="lg:col-span-2 glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-6 shadow-sm">
+            <h3 class="font-heading font-bold text-base text-forest-900 border-b border-gray-100 pb-3">Agreed Commercial Terms</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                <div class="p-3 bg-gray-50 rounded-2xl">
+                    <span class="text-gray-400">Contract Volume</span>
+                    <div class="font-extrabold text-forest-900 text-lg mt-0.5">{{ contract.quantity }} {{ contract.unit }}</div>
+                </div>
+                <div class="p-3 bg-gray-50 rounded-2xl">
+                    <span class="text-gray-400">Rate / {{ contract.unit }}</span>
+                    <div class="font-extrabold text-emerald-700 text-lg mt-0.5">₹{{ contract.price_per_unit }}</div>
+                </div>
+                <div class="p-3 bg-gray-50 rounded-2xl">
+                    <span class="text-gray-400">Total Contract Value</span>
+                    <div class="font-extrabold text-forest-900 text-lg mt-0.5">₹{{ contract.total_amount|floatformat:2 }}</div>
+                </div>
+                <div class="p-3 bg-gray-50 rounded-2xl">
+                    <span class="text-gray-400">Advance Escrow ({{ contract.advance_payment_percentage }}%)</span>
+                    <div class="font-extrabold text-blue-700 text-lg mt-0.5">₹{{ contract.advance_amount|floatformat:2 }}</div>
+                </div>
+            </div>
+
+            <!-- Detailed Specifications List -->
+            <div class="space-y-3 text-xs text-gray-700 pt-2">
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Quality Benchmark:</span>
+                    <span class="font-semibold text-gray-900">{{ contract.get_required_quality_grade_display }} ({{ contract.quality_specifications|default:"Standard FAQ" }})</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Scheduled Delivery Date:</span>
+                    <span class="font-semibold text-emerald-800">{{ contract.delivery_date|date:"d F Y" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Warehouse Delivery Location:</span>
+                    <span class="font-semibold text-gray-900 text-right max-w-sm">{{ contract.delivery_address }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Payment & Escrow Conditions:</span>
+                    <span class="font-semibold text-gray-900 text-right max-w-sm">{{ contract.payment_terms }}</span>
+                </div>
+                {% if contract.additional_conditions %}
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Additional Terms & Covenants:</span>
+                    <span class="font-semibold text-gray-900 text-right max-w-sm">{{ contract.additional_conditions }}</span>
+                </div>
+                {% endif %}
+                {% if contract.cancellation_reason %}
+                <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800">
+                    <b>Cancellation Reason:</b> {{ contract.cancellation_reason }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Produce & Counterpart Summary -->
+        <div class="space-y-6">
+            <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                <h3 class="font-heading font-bold text-sm text-forest-900 uppercase tracking-wider">Crop Information</h3>
+                <div class="space-y-2 text-xs">
+                    <div class="font-bold text-sm text-gray-900">{{ contract.crop_listing.title }}</div>
+                    <div class="text-gray-500">Variety: {{ contract.crop_listing.variety|default:"Standard" }}</div>
+                    <div class="text-gray-500">Origin: {{ contract.crop_listing.district }}, {{ contract.crop_listing.state }}</div>
+                    <div class="text-gray-500">Farming Method: {{ contract.crop_listing.get_farming_type_display }}</div>
+                    <a href="{% url 'marketplace:crop_detail' contract.crop_listing.pk %}" class="btn btn-secondary text-xs w-full py-2 mt-2 text-center block font-semibold">
+                        View Marketplace Listing
+                    </a>
+                </div>
+            </div>
+
+            <!-- Escrow Payment Status Box -->
+            <div class="glass-card p-6 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-3xl border border-teal-200 shadow-sm space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-heading font-bold text-sm text-teal-950">Payment & Escrow Status</h3>
+                    <i data-lucide="shield-check" class="w-4 h-4 text-teal-700"></i>
+                </div>
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Total Settled:</span>
+                        <span class="font-bold text-emerald-800">₹{{ contract.total_paid_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Remaining Balance:</span>
+                        <span class="font-bold text-gray-800">₹{{ contract.remaining_payment_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+
+                {% if is_buyer and not contract.is_advance_paid and contract.status != 'CANCELLED' %}
+                    <a href="{% url 'payments:initiate' contract.pk %}?type=ADVANCE" class="btn btn-primary text-xs w-full py-2.5 font-bold flex items-center justify-center gap-1.5 shadow">
+                        <i data-lucide="wallet" class="w-4 h-4"></i>
+                        <span>Pay Advance Deposit (₹{{ contract.advance_amount|floatformat:0 }})</span>
+                    </a>
+                {% elif is_buyer and contract.remaining_payment_amount > 0 and contract.status != 'CANCELLED' %}
+                    <a href="{% url 'payments:initiate' contract.pk %}?type=REMAINING" class="btn btn-primary text-xs w-full py-2.5 font-bold flex items-center justify-center gap-1.5 shadow">
+                        <i data-lucide="credit-card" class="w-4 h-4"></i>
+                        <span>Pay Remaining Balance (₹{{ contract.remaining_payment_amount|floatformat:0 }})</span>
+                    </a>
+                {% endif %}
+                <a href="{% url 'payments:list' %}" class="text-[11px] text-emerald-700 hover:underline block text-center mt-1">
+                    View Transaction Receipts →
+                </a>
+            </div>
+
+            <!-- Delivery & Consignments Box -->
+            <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-heading font-bold text-sm text-forest-900">Shipment Deliveries</h3>
+                    <span class="text-xs font-bold text-emerald-700">{{ contract.delivery_progress_pct }}% Fulfilled</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div class="bg-emerald-600 h-2 rounded-full" style="width: {{ contract.delivery_progress_pct }}%"></div>
+                </div>
+                <p class="text-[11px] text-gray-500">
+                    Delivered: <b>{{ contract.total_delivered_quantity }}</b> of {{ contract.quantity }} {{ contract.unit }}
+                </p>
+
+                {% if is_farmer and contract.status in 'ACTIVE,PRODUCTION_IN_PROGRESS,READY_FOR_DELIVERY,PARTIALLY_DELIVERED' %}
+                <a href="{% url 'deliveries:create' contract.pk %}" class="btn btn-secondary text-xs w-full py-2 font-semibold flex items-center justify-center gap-1.5">
+                    <i data-lucide="truck" class="w-4 h-4 text-emerald-600"></i> Schedule Shipment
+                </a>
+                {% endif %}
+
+                {% if is_buyer and contract.status in 'READY_FOR_DELIVERY,DELIVERED,PARTIALLY_DELIVERED' %}
+                <form method="POST" action="{% url 'deliveries:complete_contract' contract.pk %}" onsubmit="return confirm('Confirm verified receipt of all goods and complete this contract?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary text-xs w-full py-2 font-bold bg-emerald-700 hover:bg-emerald-800">
+                        Confirm Complete Fulfillment
+                    </button>
+                </form>
+                {% endif %}
+
+                <a href="{% url 'deliveries:list' %}" class="text-[11px] text-emerald-700 hover:underline block text-center">
+                    Track All Deliveries →
+                </a>
+            </div>
+
+            <!-- Review / Dispute Options -->
+            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2 text-center">
+                {% if contract.status == 'COMPLETED' %}
+                <a href="{% url 'reviews:create' contract.pk %}" class="btn btn-primary text-xs w-full py-2.5 font-bold flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white">
+                    <i data-lucide="star" class="w-4 h-4 fill-white"></i> Leave Rating & Review
+                </a>
+                {% endif %}
+
+                {% if contract.status != 'CANCELLED' and contract.status != 'DRAFT' and contract.status != 'DISPUTED' %}
+                <a href="{% url 'disputes:file' contract.pk %}" class="text-[11px] text-rose-600 hover:underline inline-flex items-center gap-1">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Lodge Formal Dispute on Contract
+                </a>
+                {% elif contract.status == 'DISPUTED' %}
+                <span class="badge badge-danger text-xs inline-block">Contract Under Active Dispute</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit History & Acceptance Trail (Prompt 3 Section 4 & 5) -->
+    <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-4">
+        <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+            <i data-lucide="history" class="w-4 h-4 text-emerald-600"></i>
+            <span>Audit History & State Transition Trail</span>
+        </h3>
+        <div class="space-y-3">
+            {% for h in history %}
+            <div class="flex items-start gap-3 p-3 bg-gray-50/70 rounded-2xl border border-gray-100 text-xs">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 mt-1.5"></div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-gray-900">{{ h.performed_by.get_full_name|default:"AgriSure System" }}</span>
+                        <span class="text-gray-400 text-[10px]">{{ h.created_at|date:"d M Y, H:i" }} UTC</span>
+                    </div>
+                    <p class="text-gray-600 mt-0.5">{{ h.comment }}</p>
+                    <div class="text-[10px] text-gray-400 mt-0.5">Status: <span class="font-semibold text-gray-700">{{ h.to_status }}</span></div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-6 text-xs text-gray-400">No history events logged yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- MODAL: Propose Contract Amendment -->
+    <div x-show="amendOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-forest-950/60 backdrop-blur-sm p-4" style="display: none;">
+        <div @click.away="amendOpen = false" class="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-gray-100 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div>
+                    <h3 class="font-heading font-bold text-lg text-forest-900">Propose Contract Amendment</h3>
+                    <p class="text-xs text-gray-500">Amending terms creates Version v{{ contract.version|add:"1" }} and requires dual re-acceptance.</p>
+                </div>
+                <button type="button" @click="amendOpen = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form method="post" action="{% url 'contracts:amend' contract.pk %}" class="space-y-4 text-xs">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label font-bold text-forest-900">Reason for Contract Amendment *</label>
+                    {{ amendment_form.amendment_reason }}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="form-group">
+                        <label class="form-label">Contracted Quantity ({{ contract.unit }})</label>
+                        {{ amendment_form.quantity }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price per {{ contract.unit }} (₹)</label>
+                        {{ amendment_form.price_per_unit }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="form-group">
+                        <label class="form-label">Target Delivery Date</label>
+                        {{ amendment_form.delivery_date }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Required Quality Grade</label>
+                        {{ amendment_form.required_quality_grade }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Warehouse Delivery Address</label>
+                    {{ amendment_form.delivery_address }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Quality Specifications</label>
+                    {{ amendment_form.quality_specifications }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Payment & Escrow Terms</label>
+                    {{ amendment_form.payment_terms }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Additional Covenants</label>
+                    {{ amendment_form.additional_conditions }}
+                </div>
+
+                <div class="flex gap-3 pt-3">
+                    <button type="submit" class="btn btn-primary flex-1 py-2.5 text-xs font-bold">
+                        Submit Amendment Proposal
+                    </button>
+                    <button type="button" @click="amendOpen = false" class="btn btn-secondary px-4 py-2.5 text-xs">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Update Status (Farmer Production / Buyer Confirmation) -->
+    <div x-show="statusOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-forest-950/60 backdrop-blur-sm p-4" style="display: none;">
+        <div @click.away="statusOpen = false" class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <h3 class="font-heading font-bold text-lg text-forest-900">Update Contract State</h3>
+                <button type="button" @click="statusOpen = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <form method="post" action="{% url 'contracts:update_status' contract.pk %}" class="space-y-4 text-xs">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label font-bold text-forest-900">Transition To New Status:</label>
+                    <select name="status" class="form-input" required>
+                        {% if is_farmer %}
+                            {% if contract.status == 'ACTIVE' %}
+                                <option value="PRODUCTION_IN_PROGRESS">Production In Progress (Crops Sown / Cultivating)</option>
+                            {% endif %}
+                            {% if contract.status == 'PRODUCTION_IN_PROGRESS' %}
+                                <option value="READY_FOR_DELIVERY">Ready for Delivery (Harvested & Packaged)</option>
+                            {% endif %}
+                        {% elif is_buyer %}
+                            {% if contract.status in 'READY_FOR_DELIVERY,DELIVERED' %}
+                                <option value="COMPLETED">Completed & Fulfilled (Consignment Inspected & Accepted)</option>
+                            {% endif %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status Update Comments / Notes</label>
+                    <textarea name="reason" rows="2" class="form-input" placeholder="e.g. Sowing complete on 10 acres, germination healthy..."></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="btn btn-primary flex-1 py-2 text-xs font-bold">Save State Transition</button>
+                    <button type="button" @click="statusOpen = false" class="btn btn-secondary px-4 py-2 text-xs">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Cancel / Decline Contract -->
+    <div x-show="cancelOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-forest-950/60 backdrop-blur-sm p-4" style="display: none;">
+        <div @click.away="cancelOpen = false" class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <h3 class="font-heading font-bold text-lg text-rose-700">Decline / Cancel Contract</h3>
+                <button type="button" @click="cancelOpen = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <form method="post" action="{% url 'contracts:reject' contract.pk %}" class="space-y-4 text-xs">
+                {% csrf_token %}
+                <p class="text-gray-600">
+                    Are you sure you want to decline Contract <b>#{{ contract.contract_number }}</b>? This will cancel the proposal and notify the counterpart.
+                </p>
+                <div class="form-group">
+                    <label class="form-label font-bold text-gray-800">Reason for Cancellation</label>
+                    <textarea name="cancellation_reason" rows="2" class="form-input" placeholder="Explain the reason..." required></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="btn btn-danger flex-1 py-2 text-xs font-bold">Confirm Cancellation</button>
+                    <button type="button" @click="cancelOpen = false" class="btn btn-secondary px-4 py-2 text-xs">Back</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

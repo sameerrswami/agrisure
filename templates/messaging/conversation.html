@@ -1,0 +1,88 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Chat with {{ other_participant.get_full_name }} – AgriSure{% endblock %}
+{% block dashboard_title %}Direct Communication{% endblock %}
+
+{% block sidebar_menu %}
+    {% if user.is_farmer %}{% include 'layouts/farmer_sidebar.html' %}{% else %}{% include 'layouts/buyer_sidebar.html' %}{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto glass-card bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden flex flex-col h-[78vh]">
+    <!-- Conversation Header -->
+    <div class="p-4 sm:p-5 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs border border-emerald-200">
+                {{ other_participant.get_full_name|slice:":2"|upper }}
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h3 class="font-heading font-bold text-sm text-gray-900">{{ other_participant.get_full_name }}</h3>
+                    <span class="badge badge-neutral text-[10px]">{{ other_participant.get_role_display }}</span>
+                </div>
+                <div class="text-xs text-gray-500 mt-0.5">
+                    {% if conversation.related_contract %}
+                        Related: <a href="{% url 'contracts:detail' conversation.related_contract.pk %}" class="font-bold text-emerald-700 hover:underline">Contract #{{ conversation.related_contract.contract_number }}</a>
+                    {% else %}
+                        Direct Communication Channel
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{% url 'messaging:inbox' %}" class="btn btn-secondary text-xs py-1.5 px-3">
+                &larr; Inbox
+            </a>
+            {% if conversation.related_contract %}
+                <a href="{% url 'contracts:detail' conversation.related_contract.pk %}" class="btn btn-secondary text-xs py-1.5 px-3 text-emerald-700">
+                    Agreement
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Message Stream with Reliable Polling -->
+    <div id="messagesContainer" 
+         class="flex-1 p-6 overflow-y-auto space-y-4"
+         hx-get="{% url 'messaging:message_stream' conversation.pk %}"
+         hx-trigger="every 5s"
+         hx-swap="innerHTML">
+        {% include 'messaging/partials/message_list.html' %}
+    </div>
+
+    <!-- Message Input Bar -->
+    <form method="post" enctype="multipart/form-data" class="p-4 border-t border-gray-100 bg-gray-50/50 space-y-2">
+        {% csrf_token %}
+        <div class="flex items-center gap-2">
+            <div class="flex-1 relative">
+                <textarea name="content" rows="1" placeholder="Type your message here..." class="form-input text-xs py-2.5 pl-3 pr-10 resize-none rounded-2xl" required></textarea>
+            </div>
+            <label class="btn btn-secondary text-xs py-2 px-3 cursor-pointer flex items-center gap-1.5" title="Attach document or crop photo (PDF, JPEG, PNG, max 5MB)">
+                <i data-lucide="paperclip" class="w-4 h-4 text-gray-600"></i>
+                <span class="hidden sm:inline">Attach</span>
+                <input type="file" name="attachment" class="hidden" onchange="document.getElementById('fileNamePill').textContent = this.files[0] ? this.files[0].name : '';">
+            </label>
+            <button type="submit" class="btn btn-primary text-xs py-2.5 px-4 font-bold flex items-center gap-1.5 shadow">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                <span>Send</span>
+            </button>
+        </div>
+        <div id="fileNamePill" class="text-[11px] text-emerald-700 font-semibold truncate pl-2"></div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+    // Also scroll down after HTMX swap
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        if (evt.detail.target.id === 'messagesContainer') {
+            container.scrollTop = container.scrollHeight;
+        }
+    });
+});
+</script>
+{% endblock %}

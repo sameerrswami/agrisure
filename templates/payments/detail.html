@@ -1,0 +1,195 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Payment Receipt #{{ payment.receipt_number }} – AgriSure{% endblock %}
+{% block dashboard_title %}Payment Receipt & Audit Details{% endblock %}
+{% block sidebar_menu %}
+    {% if user.is_farmer %}
+        {% include 'layouts/farmer_sidebar.html' %}
+    {% elif user.is_buyer %}
+        {% include 'layouts/buyer_sidebar.html' %}
+    {% else %}
+        {% include 'layouts/admin_sidebar.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Action bar -->
+    <div class="flex items-center justify-between">
+        <a href="{% url 'payments:list' %}" class="btn btn-secondary py-2 px-4 text-xs inline-flex items-center gap-1.5">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Payments
+        </a>
+        <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="btn btn-secondary py-2 px-4 text-xs inline-flex items-center gap-1.5">
+                <i data-lucide="printer" class="w-4 h-4"></i> Print Receipt
+            </button>
+            {% if payment.is_successful %}
+            <a href="{% url 'payments:download_receipt' payment.pk %}" class="btn btn-primary py-2 px-4 text-xs inline-flex items-center gap-1.5">
+                <i data-lucide="download" class="w-4 h-4"></i> Download PDF
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Official Receipt Container -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden print:shadow-none print:border-none">
+        <!-- Receipt Top Header -->
+        <div class="p-8 border-b border-gray-100 bg-gradient-to-r from-forest-900 to-emerald-800 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <span class="text-[11px] uppercase tracking-wider text-emerald-300 font-semibold block">Official Platform Transaction Receipt</span>
+                <h2 class="font-heading text-2xl font-bold tracking-tight mt-0.5">AgriSure Settlement System</h2>
+                <p class="text-xs text-emerald-200 mt-1">Receipt Ref: <span class="font-mono font-bold">{{ payment.receipt_number }}</span></p>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-emerald-200 block">Total Transaction Value</span>
+                <div class="font-heading font-extrabold text-3xl text-emerald-100">₹{{ payment.amount|floatformat:2 }}</div>
+                <div class="mt-1">
+                    {% if payment.status == 'CAPTURED' or payment.status == 'COMPLETED' %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-400 text-emerald-950">CAPTURED & SETTLED</span>
+                    {% elif payment.status == 'PENDING' or payment.status == 'CREATED' %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-amber-950">PENDING VERIFICATION</span>
+                    {% elif payment.status == 'REFUNDED' %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-purple-400 text-purple-950">REFUNDED</span>
+                    {% else %}
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-red-400 text-red-950">{{ payment.get_status_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 space-y-8">
+            <!-- Metadata Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="text-gray-400 block mb-1">Transaction ID</span>
+                    <span class="font-mono font-bold text-gray-900">{{ payment.transaction_id }}</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="text-gray-400 block mb-1">Payment Method</span>
+                    <span class="font-semibold text-gray-900">{{ payment.payment_method|default:"Razorpay Secured" }}</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="text-gray-400 block mb-1">Paid Timestamp</span>
+                    <span class="font-semibold text-gray-900">{{ payment.paid_at|default:payment.created_at|date:"d M Y, H:i" }} IST</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span class="text-gray-400 block mb-1">Gateway Order ID</span>
+                    <span class="font-mono font-semibold text-gray-700 text-[11px] truncate block">{{ payment.razorpay_order_id|default:"Direct" }}</span>
+                </div>
+            </div>
+
+            <!-- Parties Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                <div class="p-5 rounded-2xl border border-gray-200 bg-gray-50/50">
+                    <span class="text-emerald-800 font-bold uppercase tracking-wider block mb-2">Payer (Buyer)</span>
+                    <div class="space-y-1">
+                        <div class="font-bold text-sm text-gray-900">{{ payment.payer.get_full_name }}</div>
+                        <div class="text-gray-600">{{ payment.payer.email }}</div>
+                        <div class="text-gray-600">Ph: {{ payment.payer.phone }}</div>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-2xl border border-gray-200 bg-gray-50/50">
+                    <span class="text-emerald-800 font-bold uppercase tracking-wider block mb-2">Payee (Farmer)</span>
+                    <div class="space-y-1">
+                        <div class="font-bold text-sm text-gray-900">{{ payment.payee.get_full_name }}</div>
+                        <div class="text-gray-600">{{ payment.payee.email }}</div>
+                        <div class="text-gray-600">Ph: {{ payment.payee.phone }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract & Item Breakdown -->
+            <div class="rounded-2xl border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+                    <span class="font-bold text-xs text-gray-700 uppercase tracking-wider">Contract Item Breakdown</span>
+                    <a href="{% url 'contracts:detail' payment.contract.pk %}" class="text-xs text-emerald-700 font-semibold hover:underline">
+                        View Contract #{{ payment.contract.contract_number }} →
+                    </a>
+                </div>
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-gray-50/50 text-gray-500 border-b border-gray-100">
+                            <th class="p-4 text-left">Commodity / Specification</th>
+                            <th class="p-4 text-center">Quantity</th>
+                            <th class="p-4 text-center">Unit Price</th>
+                            <th class="p-4 text-right">Payment Stage</th>
+                            <th class="p-4 text-right">Amount (INR)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr>
+                            <td class="p-4">
+                                <span class="font-bold text-gray-900 text-sm block">{{ payment.contract.crop_listing.title }}</span>
+                                <span class="text-gray-500 text-[11px]">{{ payment.contract.crop_listing.category.name }} • Grade {{ payment.contract.required_quality_grade }}</span>
+                            </td>
+                            <td class="p-4 text-center font-semibold text-gray-800">
+                                {{ payment.contract.quantity }} {{ payment.contract.unit }}
+                            </td>
+                            <td class="p-4 text-center text-gray-800">
+                                ₹{{ payment.contract.price_per_unit }}/{{ payment.contract.unit }}
+                            </td>
+                            <td class="p-4 text-right font-medium text-emerald-700">
+                                {{ payment.get_payment_type_display }}
+                            </td>
+                            <td class="p-4 text-right font-bold text-sm text-gray-900">
+                                ₹{{ payment.amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-emerald-50/60 font-bold border-t border-emerald-100">
+                            <td colspan="4" class="p-4 text-right text-emerald-900 uppercase">Amount Paid in this Transaction:</td>
+                            <td class="p-4 text-right text-base text-emerald-800">₹{{ payment.amount|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Refunds Log if any -->
+            {% if refunds %}
+            <div class="rounded-2xl border border-purple-200 bg-purple-50/40 p-6 space-y-3">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-purple-900">Refund Records Issued</h4>
+                <div class="space-y-2">
+                    {% for rf in refunds %}
+                    <div class="p-3 bg-white rounded-xl border border-purple-100 flex items-center justify-between text-xs">
+                        <div>
+                            <span class="font-mono font-bold text-purple-900">{{ rf.refund_id }}</span>
+                            <span class="text-gray-500 block text-[11px]">{{ rf.reason }} • {{ rf.created_at|date:"d M Y, H:i" }}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-purple-700 text-sm">-₹{{ rf.amount|floatformat:2 }}</span>
+                            <span class="badge badge-success text-[10px] block mt-0.5">{{ rf.status }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Admin Refund Trigger -->
+            {% if user.is_admin_user and payment.is_successful and payment.status != 'REFUNDED' %}
+            <div class="p-6 bg-amber-50 rounded-2xl border border-amber-200 space-y-3">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-amber-700"></i> Administrator Payment Settlement & Refund Control
+                </h4>
+                <form method="POST" action="{% url 'payments:refund' payment.pk %}" class="flex flex-col sm:flex-row gap-3">
+                    {% csrf_token %}
+                    <input type="number" step="0.01" name="amount" max="{{ payment.amount }}" value="{{ payment.amount }}" required class="form-input text-xs w-full sm:w-48" placeholder="Refund Amount (INR)">
+                    <input type="text" name="reason" required class="form-input text-xs flex-1" placeholder="Reason for Refund (Mandatory audit trail)">
+                    <button type="submit" onclick="return confirm('Issue verified refund of specified amount?');" class="btn btn-danger py-2 px-4 text-xs whitespace-nowrap">
+                        Issue Refund
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- IT Act Disclaimer -->
+            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-[11px] text-gray-500 leading-relaxed text-center">
+                This transaction receipt is electronically generated and digitally recorded under the Information Technology Act, 2000. 
+                Payment signature was validated via HMAC-SHA256. For dispute mediation, please refer to the contract dispute facility.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

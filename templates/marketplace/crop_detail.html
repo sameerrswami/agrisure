@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% block title %}{{ crop.title }} – Agricultural Produce – AgriSure{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50/50 py-8 border-b border-gray-100" x-data="{ currentImg: '{% if crop.featured_image %}{{ crop.featured_image.url }}{% endif %}' }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <!-- Breadcrumb & Top Actions -->
+        <div class="flex items-center justify-between text-xs text-gray-500">
+            <div class="flex items-center gap-2">
+                <a href="{% url 'marketplace:index' %}" class="hover:text-emerald-700">Marketplace</a>
+                <span>&rsaquo;</span>
+                <span class="text-gray-700 font-semibold">{{ crop.category.name }}</span>
+                <span>&rsaquo;</span>
+                <span class="text-gray-900 font-bold truncate max-w-xs">{{ crop.title }}</span>
+            </div>
+
+            {% if user.is_authenticated and user.is_buyer %}
+            <a href="{% url 'buyers:toggle_wishlist' crop.pk %}" class="btn btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                {% if is_saved %}
+                    <i data-lucide="heart" class="w-4 h-4 fill-rose-600 text-rose-600"></i>
+                    <span class="text-rose-600 font-bold">Saved in Wishlist</span>
+                {% else %}
+                    <i data-lucide="heart" class="w-4 h-4"></i>
+                    <span>Save to Wishlist</span>
+                {% endif %}
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <!-- Left Column: Gallery & Sourcing Map -->
+            <div class="lg:col-span-7 space-y-6">
+                <!-- Large Image Display -->
+                <div class="h-96 rounded-3xl bg-white overflow-hidden relative border border-gray-200 shadow-sm flex items-center justify-center">
+                    <template x-if="currentImg">
+                        <img :src="currentImg" alt="{{ crop.title }}" class="w-full h-full object-cover">
+                    </template>
+                    <template x-if="!currentImg">
+                        <div class="w-full h-full bg-emerald-50 flex items-center justify-center text-emerald-700">
+                            <i data-lucide="sprout" class="w-20 h-20"></i>
+                        </div>
+                    </template>
+                    <div class="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
+                        <span class="badge badge-success text-xs font-bold">{{ crop.get_quality_grade_display }}</span>
+                        {% if crop.is_organic %}
+                        <span class="badge badge-info text-xs font-bold">Certified Organic</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Gallery Thumbnails Carousel/Row -->
+                {% if gallery or crop.featured_image %}
+                <div class="flex items-center gap-3 overflow-x-auto pb-2">
+                    {% if crop.featured_image %}
+                    <button type="button" @click="currentImg = '{{ crop.featured_image.url }}'" class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-emerald-500 flex-shrink-0 focus:outline-none shadow-sm">
+                        <img src="{{ crop.featured_image.url }}" class="w-full h-full object-cover">
+                    </button>
+                    {% endif %}
+                    {% for g in gallery %}
+                    <button type="button" @click="currentImg = '{{ g.image.url }}'" class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-200 hover:border-emerald-500 flex-shrink-0 focus:outline-none shadow-sm transition-colors">
+                        <img src="{{ g.image.url }}" class="w-full h-full object-cover">
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Description & Characteristics -->
+                <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-3">
+                    <h3 class="font-heading font-bold text-lg text-forest-900">Crop Specifications & Agronomic Profile</h3>
+                    <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ crop.description }}</p>
+                </div>
+
+                <!-- Sourcing Map (Prompt 2 Section 7 & 9) -->
+                <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                            <span>Approximate Farm Sourcing Belt</span>
+                        </h3>
+                        <span class="text-xs text-gray-500">{{ crop.district }}, {{ crop.state }}</span>
+                    </div>
+                    <div id="cropDetailSourcingMap" class="h-64 rounded-2xl border border-gray-200 z-10"></div>
+                    <p class="text-[11px] text-gray-400">
+                        * Exact farm coordinates are revealed to verified buyers upon mutual contract execution to protect farmer privacy.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Column: Commercials, CTAs & Farmer Profile -->
+            <div class="lg:col-span-5 space-y-6">
+                <!-- Title & Header -->
+                <div>
+                    <span class="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-100 px-3 py-1 rounded-full">
+                        {{ crop.category.name }}
+                    </span>
+                    <h1 class="font-heading text-3xl font-extrabold text-forest-900 mt-3">{{ crop.title }}</h1>
+                    <div class="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
+                        <span>Variety: <b class="text-gray-800">{{ crop.variety|default:"Standard" }}</b></span>
+                        <span>•</span>
+                        <span>Harvest: <b class="text-emerald-700">{{ crop.expected_harvest_date|date:"d M Y"|default:"Ready Now" }}</b></span>
+                    </div>
+                </div>
+
+                <!-- Commercial Price & Volume Box -->
+                <div class="glass-card p-6 bg-gradient-to-br from-emerald-50 via-teal-50/40 to-white rounded-3xl border border-emerald-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Spot / Base Rate</span>
+                        <div class="text-right">
+                            <div class="font-heading font-extrabold text-3xl text-emerald-800">
+                                ₹{{ crop.price_per_unit }}
+                            </div>
+                            <div class="text-xs text-gray-400">per {{ crop.unit }}</div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-emerald-200/60 grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span class="text-gray-400">Available Volume:</span>
+                            <div class="font-bold text-gray-900 text-sm">{{ crop.quantity_remaining }} {{ crop.unit }}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Min Order Size:</span>
+                            <div class="font-bold text-gray-900 text-sm">{{ crop.minimum_order_quantity|default:"1" }} {{ crop.unit }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Primary Action CTAs (Prompt 2 Section 7) -->
+                <div class="space-y-3">
+                    {% if user.is_authenticated and user.is_buyer %}
+                        <a href="{% url 'contracts:request' crop.pk %}" class="btn btn-primary btn-lg w-full py-4 text-base flex items-center justify-center gap-2 shadow-xl shadow-emerald-700/20 font-bold">
+                            <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                            <span>Request Farming Contract</span>
+                        </a>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="{% url 'negotiations:start' crop.pk %}" class="btn btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1.5">
+                                <i data-lucide="scale" class="w-4 h-4 text-teal-700"></i>
+                                <span>Negotiate Price</span>
+                            </a>
+                            <a href="{% url 'messaging:start' crop.farmer.id %}" class="btn btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1.5">
+                                <i data-lucide="message-square" class="w-4 h-4 text-emerald-700"></i>
+                                <span>Contact Farmer</span>
+                            </a>
+                        </div>
+                    {% elif user.is_authenticated and user.is_farmer %}
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 text-center">
+                            You are signed in with a Farmer account. Formal contract requests and negotiations are reserved for verified institutional buyers.
+                        </div>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-primary w-full py-3.5 text-center font-bold">
+                            Sign In to Execute Contract
+                        </a>
+                        <a href="{% url 'accounts:register_buyer' %}" class="btn btn-secondary w-full py-3 text-center text-xs font-semibold">
+                            Register Institutional Buyer Account
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Farmer Profile Card (Prompt 2 Section 7) -->
+                <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                        <h3 class="font-heading font-bold text-sm text-forest-900 uppercase tracking-wider">Producer Profile</h3>
+                        {% if crop.farmer.farmer_profile.is_verified %}
+                        <span class="badge badge-success text-[10px] flex items-center gap-1">
+                            <i data-lucide="check" class="w-3 h-3"></i> Verified Producer
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-100 overflow-hidden flex items-center justify-center border border-emerald-200 flex-shrink-0">
+                            {% if crop.farmer.farmer_profile.profile_image %}
+                                <img src="{{ crop.farmer.farmer_profile.profile_image.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <i data-lucide="user" class="w-7 h-7 text-emerald-700"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="font-heading font-bold text-base text-gray-900">{{ crop.farmer.get_full_name }}</div>
+                            <div class="text-xs text-gray-500">{{ crop.farmer.farmer_profile.farm_name|default:"Agricultural Producer" }}</div>
+                            <!-- Rating -->
+                            <div class="flex items-center gap-1.5 mt-1 text-xs">
+                                <div class="flex text-amber-400">
+                                    {% for i in "12345" %}
+                                    <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
+                                    {% endfor %}
+                                </div>
+                                <span class="font-bold text-gray-800">{{ farmer_rating }}</span>
+                                <span class="text-gray-400">({{ reviews_count }} reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 text-xs text-gray-600 pt-2 border-t border-gray-100">
+                        <div class="flex justify-between py-1 border-b border-gray-50">
+                            <span class="text-gray-400">Farm Sourcing Location:</span>
+                            <span class="font-semibold text-gray-900">{{ crop.district }}, {{ crop.state }}</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-gray-50">
+                            <span class="text-gray-400">Total Registered Land:</span>
+                            <span class="font-semibold text-gray-900">{{ crop.farmer.farmer_profile.farm_size|default:"10" }} Acres</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-gray-50">
+                            <span class="text-gray-400">Farming Experience:</span>
+                            <span class="font-semibold text-gray-900">{{ crop.farmer.farmer_profile.farming_experience_years|default:"8" }} Years</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-gray-400">Delivery Facilities:</span>
+                            <span class="font-semibold text-gray-900">{{ crop.delivery_location_availability|default:"Farm Gate Pickup" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Listings from Same Farmer -->
+                {% if farmer_other_crops %}
+                <div class="glass-card p-5 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-3">
+                    <h3 class="font-heading font-bold text-xs uppercase tracking-wider text-forest-900">More from this Farmer</h3>
+                    <div class="space-y-2">
+                        {% for fc in farmer_other_crops %}
+                        <a href="{% url 'marketplace:crop_detail' fc.pk %}" class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 text-xs transition-colors">
+                            <div class="font-semibold text-gray-800 line-clamp-1">{{ fc.title }}</div>
+                            <div class="font-extrabold text-emerald-700 whitespace-nowrap">₹{{ fc.price_per_unit }}/{{ fc.unit }}</div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Similar Produce Recommendations Section -->
+        {% if related_crops %}
+        <div class="pt-8 border-t border-gray-200 space-y-4">
+            <h3 class="font-heading font-bold text-xl text-forest-900">Similar Produce in {{ crop.category.name }}</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for rc in related_crops %}
+                <div class="glass-card bg-white rounded-3xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
+                    <div class="h-36 bg-gray-100 relative">
+                        {% if rc.featured_image %}
+                            <img src="{{ rc.featured_image.url }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-emerald-600 bg-emerald-50"><i data-lucide="sprout" class="w-8 h-8"></i></div>
+                        {% endif %}
+                        <span class="absolute top-2 right-2 badge badge-success text-[10px]">{{ rc.get_quality_grade_display }}</span>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between space-y-2">
+                        <div>
+                            <h4 class="font-heading font-bold text-sm text-gray-900 line-clamp-1">{{ rc.title }}</h4>
+                            <div class="text-[11px] text-gray-500">{{ rc.district }}, {{ rc.state }}</div>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <span class="font-bold text-emerald-700 text-sm">₹{{ rc.price_per_unit }}/{{ rc.unit }}</span>
+                            <a href="{% url 'marketplace:crop_detail' rc.pk %}" class="btn btn-secondary text-xs py-1 px-2.5">Inspect</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Sourcing Location Map Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lat = {{ crop.latitude|default:"28.6139" }};
+    const lng = {{ crop.longitude|default:"77.2090" }};
+    const map = L.map('cropDetailSourcingMap').setView([lat, lng], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    L.circle([lat, lng], {
+        color: '#059669',
+        fillColor: '#10b981',
+        fillOpacity: 0.25,
+        radius: 6000
+    }).addTo(map).bindPopup("<b>Approximate Sourcing Hub</b><br/>{{ crop.district }}, {{ crop.state }}");
+});
+</script>
+{% endblock %}

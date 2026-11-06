@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}My Profile – AgriSure{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12 space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="font-heading text-2xl font-bold text-forest-900">User Account Settings</h1>
+        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary text-sm">Edit Profile</a>
+    </div>
+
+    <div class="glass-card p-6 bg-white rounded-2xl border border-gray-200 flex items-center gap-6">
+        <div class="w-20 h-20 rounded-full bg-emerald-100 text-emerald-800 font-heading font-extrabold text-2xl flex items-center justify-center border-2 border-emerald-300">
+            {{ user.first_name|first }}{{ user.last_name|first }}
+        </div>
+        <div>
+            <div class="text-xl font-bold text-gray-900">{{ user.get_full_name }}</div>
+            <div class="text-sm text-gray-500">{{ user.email }} • Role: <span class="font-semibold text-emerald-700">{{ user.get_role_display }}</span></div>
+            <div class="text-xs text-gray-400 mt-1">Joined {{ user.date_joined|date:"M Y" }}</div>
+        </div>
+    </div>
+
+    <div class="glass-card p-6 bg-white rounded-2xl border border-gray-200 space-y-4">
+        <h3 class="font-bold text-gray-900">Security</h3>
+        <p class="text-sm text-gray-600">Keep your account safe by updating your password regularly.</p>
+        <a href="{% url 'accounts:change_password' %}" class="btn btn-outline text-sm">Change Password</a>
+    </div>
+</div>
+{% endblock %}

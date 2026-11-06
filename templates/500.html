@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Server Error – AgriSure{% endblock %}
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center text-center p-4">
+    <div class="space-y-4 max-w-md">
+        <div class="text-6xl">⚠️</div>
+        <h1 class="font-heading text-3xl font-extrabold text-forest-900">500 – Unexpected Error</h1>
+        <p class="text-sm text-gray-600">Something went wrong on our servers. Our technical team has been notified.</p>
+        <a href="{% url 'core:home' %}" class="btn btn-primary inline-flex mt-4">Return Home</a>
+    </div>
+</div>
+{% endblock %}

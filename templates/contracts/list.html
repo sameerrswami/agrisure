@@ -1,0 +1,175 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Contracts Hub – AgriSure{% endblock %}
+{% block dashboard_title %}Farming Contracts Registry{% endblock %}
+
+{% block sidebar_menu %}
+    {% if user.is_farmer %}
+        {% include 'layouts/farmer_sidebar.html' %}
+    {% else %}
+        {% include 'layouts/buyer_sidebar.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header with Quick Stats & Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+        <div>
+            <h2 class="font-heading text-xl font-bold text-forest-900">
+                {% if user.is_farmer %}Farmer Contract Command Center{% else %}Corporate Procurement Agreements{% endif %}
+            </h2>
+            <p class="text-xs text-gray-500 mt-1">
+                Manage your forward contracts, pending approvals, production milestones, and delivery consignments.
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if user.is_buyer %}
+                <a href="{% url 'marketplace:index' %}" class="btn btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5">
+                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    <span>Source New Harvest</span>
+                </a>
+            {% else %}
+                <a href="{% url 'crops:create' %}" class="btn btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>List New Produce</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Contract Dashboard Tabs (Prompt 3 Section 6) -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <a href="{% url 'contracts:list' %}" class="px-3.5 py-2 rounded-xl font-semibold transition-all {% if not current_tab or current_tab == 'all' %}bg-forest-900 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+            All Contracts ({{ counts.all }})
+        </a>
+
+        {% if user.is_farmer %}
+            <a href="{% url 'contracts:list' %}?tab=awaiting_approval" class="px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if current_tab == 'awaiting_approval' %}bg-amber-600 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+                <i data-lucide="inbox" class="w-3.5 h-3.5"></i>
+                <span>Awaiting My Approval ({{ counts.awaiting_approval }})</span>
+            </a>
+            <a href="{% url 'contracts:list' %}?tab=active" class="px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if current_tab == 'active' %}bg-teal-700 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+                <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+                <span>Active Contracts ({{ counts.active }})</span>
+            </a>
+            <a href="{% url 'contracts:list' %}?tab=production" class="px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if current_tab == 'production' %}bg-emerald-700 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+                <i data-lucide="sprout" class="w-3.5 h-3.5"></i>
+                <span>Production in Progress</span>
+            </a>
+        {% else %}
+            <a href="{% url 'contracts:list' %}?tab=awaiting_approval" class="px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if current_tab == 'awaiting_approval' %}bg-amber-600 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <span>Sent Requests ({{ counts.awaiting_approval }})</span>
+            </a>
+            <a href="{% url 'contracts:list' %}?tab=active" class="px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if current_tab == 'active' %}bg-teal-700 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                <span>Active Agreements ({{ counts.active }})</span>
+            </a>
+        {% endif %}
+
+        <a href="{% url 'contracts:list' %}?tab=deliveries" class="px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if current_tab == 'deliveries' %}bg-blue-700 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+            <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+            <span>Deliveries ({{ counts.deliveries }})</span>
+        </a>
+        <a href="{% url 'contracts:list' %}?tab=completed" class="px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if current_tab == 'completed' %}bg-emerald-700 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+            <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
+            <span>Completed ({{ counts.completed }})</span>
+        </a>
+        <a href="{% url 'contracts:list' %}?tab=cancelled" class="px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if current_tab == 'cancelled' %}bg-rose-700 text-white shadow-sm{% else %}bg-white border border-gray-200 text-gray-600 hover:bg-gray-50{% endif %}">
+            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+            <span>Cancelled ({{ counts.cancelled }})</span>
+        </a>
+    </div>
+
+    <!-- Contracts Table -->
+    <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-x-auto">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Contract ID & Version</th>
+                    <th>Produce & Delivery Target</th>
+                    <th>Counterpart Entity</th>
+                    <th>Contract Volume</th>
+                    <th>Total Value (₹)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in contracts %}
+                <tr class="hover:bg-gray-50/60 transition-colors">
+                    <td>
+                        <a href="{% url 'contracts:detail' c.pk %}" class="font-mono font-bold text-emerald-800 hover:underline">
+                            {{ c.contract_number }}
+                        </a>
+                        <div class="flex items-center gap-1 mt-0.5">
+                            <span class="text-[10px] font-semibold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">v{{ c.version }}</span>
+                            <span class="text-[10px] text-gray-400">{{ c.created_at|date:"d M Y" }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="font-bold text-gray-900">{{ c.crop_listing.title }}</div>
+                        <div class="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                            <i data-lucide="calendar" class="w-3 h-3 text-emerald-600"></i>
+                            <span>{{ c.delivery_date|date:"d M Y" }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if user == c.farmer %}
+                            <div class="text-xs font-bold text-gray-900">{{ c.buyer.get_full_name }}</div>
+                            <div class="text-[11px] text-gray-400">Institutional Buyer</div>
+                        {% else %}
+                            <div class="text-xs font-bold text-gray-900">{{ c.farmer.get_full_name }}</div>
+                            <div class="text-[11px] text-gray-400">Agricultural Producer</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="font-bold text-gray-900">{{ c.quantity }} {{ c.unit }}</div>
+                        <div class="text-[10px] text-gray-400">@ ₹{{ c.price_per_unit }}/{{ c.unit }}</div>
+                    </td>
+                    <td>
+                        <div class="font-extrabold text-emerald-700 text-sm">₹{{ c.total_amount|floatformat:2 }}</div>
+                        <div class="text-[10px] text-gray-400">Adv: ₹{{ c.advance_amount|floatformat:0 }}</div>
+                    </td>
+                    <td>
+                        {% if c.status == 'ACTIVE' %}
+                            <span class="badge badge-success text-[10px]"><i data-lucide="check" class="w-3 h-3"></i> Active</span>
+                        {% elif c.status == 'PRODUCTION_IN_PROGRESS' %}
+                            <span class="badge badge-info text-[10px]">Production</span>
+                        {% elif c.status == 'READY_FOR_DELIVERY' %}
+                            <span class="badge badge-warning text-[10px]">Ready for Dispatch</span>
+                        {% elif c.status == 'COMPLETED' %}
+                            <span class="badge badge-success text-[10px]">Fulfilled</span>
+                        {% elif c.status == 'CANCELLED' %}
+                            <span class="badge badge-danger text-[10px]">Cancelled</span>
+                        {% elif c.status == 'PENDING_FARMER' %}
+                            <span class="badge badge-warning text-[10px]">Pending Farmer</span>
+                        {% elif c.status == 'PENDING_BUYER' %}
+                            <span class="badge badge-warning text-[10px]">Pending Buyer</span>
+                        {% else %}
+                            <span class="badge badge-neutral text-[10px]">{{ c.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="flex items-center gap-1.5">
+                            <a href="{% url 'contracts:detail' c.pk %}" class="btn btn-secondary text-xs py-1.5 px-3 font-semibold">
+                                View Details
+                            </a>
+                            <a href="{% url 'contracts:pdf' c.pk %}" class="btn btn-secondary text-xs p-1.5 text-gray-600 hover:text-emerald-700" title="Download PDF Agreement">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="py-12 text-center text-sm text-gray-400">
+                        No contracts found in this tab.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% for m in messages_list %}
+<div class="flex {% if m.sender == user %}justify-end{% else %}justify-start{% endif %}">
+    <div class="max-w-md p-3.5 rounded-2xl text-xs space-y-1.5 shadow-sm {% if m.sender == user %}bg-emerald-700 text-white rounded-br-none{% else %}bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200/80{% endif %}">
+        <div class="font-bold text-[10px] {% if m.sender == user %}text-emerald-200{% else %}text-emerald-800{% endif %}">
+            {{ m.sender.get_full_name }}
+        </div>
+        <p class="leading-relaxed whitespace-pre-line text-xs">{{ m.content }}</p>
+
+        <!-- Attachment Link -->
+        {% if m.attachment %}
+        <div class="pt-1.5 border-t {% if m.sender == user %}border-white/20{% else %}border-gray-200{% endif %}">
+            <a href="{{ m.attachment.url }}" target="_blank" class="flex items-center gap-1.5 {% if m.sender == user %}text-emerald-100 hover:text-white{% else %}text-emerald-700 hover:underline{% endif %} font-semibold text-[11px]">
+                <i data-lucide="paperclip" class="w-3.5 h-3.5"></i>
+                <span class="truncate max-w-xs">{{ m.attachment.name }}</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Timestamp & Read Receipt -->
+        <div class="flex items-center justify-end gap-1 text-[10px] {% if m.sender == user %}text-emerald-200/80{% else %}text-gray-400{% endif %} pt-0.5">
+            <span>{{ m.created_at|date:"d M, H:i" }}</span>
+            {% if m.sender == user %}
+                {% if m.is_read %}
+                    <span title="Read at {{ m.read_at|date:'H:i' }}">✓✓</span>
+                {% else %}
+                    <span title="Delivered">✓</span>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="py-12 text-center text-xs text-gray-400">
+    This is the beginning of your direct conversation. Send a message or share crop documents below.
+</div>
+{% endfor %}
+<script>
+    if (window.lucide) { lucide.createIcons(); }
+</script>

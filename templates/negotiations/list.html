@@ -1,0 +1,62 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Negotiations – AgriSure{% endblock %}
+{% block dashboard_title %}Price Negotiations{% endblock %}
+
+{% block sidebar_menu %}
+    {% if user.is_farmer %}
+        {% include 'layouts/farmer_sidebar.html' %}
+    {% else %}
+        {% include 'layouts/buyer_sidebar.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Produce</th>
+                    <th>Counterpart</th>
+                    <th>Latest Offer</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for neg in negotiations %}
+                <tr>
+                    <td><b>{{ neg.crop_listing.title }}</b></td>
+                    <td>
+                        {% if user == neg.farmer %}
+                            {{ neg.buyer.get_full_name }} (Buyer)
+                        {% else %}
+                            {{ neg.farmer.get_full_name }} (Farmer)
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if neg.latest_offer %}
+                            <b>₹{{ neg.latest_offer.price_per_unit }}</b> for {{ neg.latest_offer.quantity }} {{ neg.crop_listing.unit }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-info">{{ neg.get_status_display }}</span></td>
+                    <td>
+                        <a href="{% url 'negotiations:detail' neg.pk %}" class="btn btn-secondary text-xs py-1.5 px-3">
+                            View Thread
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="py-12 text-center text-sm text-gray-400">
+                        No active negotiations found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

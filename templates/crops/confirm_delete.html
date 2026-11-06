@@ -1,0 +1,20 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Delete Crop – {{ crop.title }}{% endblock %}
+{% block sidebar_menu %}{% include 'layouts/farmer_sidebar.html' %}{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-md mx-auto py-12">
+    <div class="glass-card p-8 bg-white rounded-3xl border border-gray-200 shadow-xl text-center space-y-4">
+        <div class="w-14 h-14 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+        </div>
+        <h3 class="font-heading font-bold text-xl text-gray-900">Delete Crop Listing?</h3>
+        <p class="text-sm text-gray-500">Are you sure you want to permanently remove <b>"{{ crop.title }}"</b>? This action cannot be undone.</p>
+        <form method="post" class="flex gap-3 pt-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger flex-1 py-2.5">Confirm Delete</button>
+            <a href="{% url 'crops:list' %}" class="btn btn-secondary flex-1 py-2.5">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

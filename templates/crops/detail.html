@@ -1,0 +1,236 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}{{ crop.title }} – AgriSure{% endblock %}
+{% block dashboard_title %}Crop Listing Details{% endblock %}
+
+{% block sidebar_menu %}
+    {% if user.is_farmer %}
+        {% include 'layouts/farmer_sidebar.html' %}
+    {% else %}
+        {% include 'layouts/buyer_sidebar.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-6xl mx-auto space-y-8" x-data="{ currentImg: '{% if crop.featured_image %}{{ crop.featured_image.url }}{% endif %}', updateQtyOpen: false }">
+    <!-- Top Action Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2 flex-wrap">
+                {% if crop.status == 'ACTIVE' %}
+                    <span class="badge badge-success">Active & Listed</span>
+                {% elif crop.status == 'UNAVAILABLE' %}
+                    <span class="badge badge-warning">Temporarily Unavailable</span>
+                {% elif crop.status == 'SOLD' %}
+                    <span class="badge badge-neutral">Sold Out</span>
+                {% else %}
+                    <span class="badge badge-neutral">{{ crop.get_status_display }}</span>
+                {% endif %}
+                <span class="badge badge-neutral">{{ crop.category.name }}</span>
+                {% if crop.is_organic %}
+                    <span class="badge badge-info">Certified Organic</span>
+                {% endif %}
+            </div>
+            <h2 class="font-heading text-3xl font-extrabold text-forest-900 mt-2">{{ crop.title }}</h2>
+            <p class="text-sm text-gray-500">
+                Variety: {{ crop.variety|default:"Standard" }} • {{ crop.district }}, {{ crop.state }} • Listed {{ crop.created_at|date:"d M Y" }}
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2.5 flex-wrap">
+            {% if is_owner %}
+                <!-- Update Quantity Button -->
+                <button @click="updateQtyOpen = true" class="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5">
+                    <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                    <span>Update Stock</span>
+                </button>
+                <!-- Toggle Unavailable Form -->
+                <form method="post" action="{% url 'crops:toggle_status' crop.pk %}" class="inline">
+                    {% csrf_token %}
+                    {% if crop.status == 'ACTIVE' %}
+                        <button type="submit" class="btn btn-secondary text-xs py-2 px-3 text-amber-700 hover:bg-amber-50 border-amber-200">
+                            <i data-lucide="eye-off" class="w-3.5 h-3.5 inline mr-1"></i> Make Unavailable
+                        </button>
+                    {% elif crop.status == 'UNAVAILABLE' %}
+                        <button type="submit" class="btn btn-secondary text-xs py-2 px-3 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
+                            <i data-lucide="eye" class="w-3.5 h-3.5 inline mr-1"></i> Activate Listing
+                        </button>
+                    {% endif %}
+                </form>
+                <a href="{% url 'crops:edit' crop.pk %}" class="btn btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    <span>Edit Listing</span>
+                </a>
+            {% elif user.is_buyer %}
+                <a href="{% url 'contracts:request' crop.pk %}" class="btn btn-primary text-xs py-2 px-4">Request Contract</a>
+                <a href="{% url 'negotiations:start' crop.pk %}" class="btn btn-secondary text-xs py-2 px-4">Negotiate Price</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Update Quantity Modal (Alpine.js) -->
+    <div x-show="updateQtyOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-forest-950/60 backdrop-blur-sm p-4" style="display: none;">
+        <div @click.away="updateQtyOpen = false" class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <h3 class="font-heading font-bold text-lg text-forest-900">Update Remaining Stock</h3>
+                <button @click="updateQtyOpen = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-gray-500">
+                Current available remaining quantity is <b class="text-forest-900">{{ crop.quantity_remaining }} {{ crop.unit }}</b> (out of total {{ crop.quantity_available }} {{ crop.unit }}).
+            </p>
+            <form method="post" action="{% url 'crops:update_quantity' crop.pk %}" class="space-y-4">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">New Remaining Quantity ({{ crop.unit }})</label>
+                    <input type="number" step="0.01" min="0" max="{{ crop.quantity_available }}" name="quantity_remaining" value="{{ crop.quantity_remaining }}" class="form-input" required>
+                    <span class="text-[11px] text-gray-400">Setting this to 0 marks the listing as Sold Out.</span>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="btn btn-primary flex-1 py-2 text-sm font-semibold">Save Quantity</button>
+                    <button type="button" @click="updateQtyOpen = false" class="btn btn-secondary px-4 py-2 text-sm">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Listing Performance Metrics (Prompt 2 Section 3) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 bg-white rounded-3xl border border-gray-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+                <i data-lucide="eye" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span>Catalog Views</span>
+            </div>
+            <div class="font-heading font-extrabold text-2xl text-forest-900 mt-1">{{ crop.views_count }}</div>
+        </div>
+        <div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+                <i data-lucide="scale" class="w-3.5 h-3.5 text-teal-600"></i>
+                <span>Price Inquiries</span>
+            </div>
+            <div class="font-heading font-extrabold text-2xl text-teal-700 mt-1">{{ inquiries_count }}</div>
+        </div>
+        <div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+                <i data-lucide="file-check" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span>Total Contracts</span>
+            </div>
+            <div class="font-heading font-extrabold text-2xl text-amber-600 mt-1">{{ related_contracts_count }}</div>
+        </div>
+        <div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span>Active Binding</span>
+            </div>
+            <div class="font-heading font-extrabold text-2xl text-emerald-700 mt-1">{{ active_contracts_count }}</div>
+        </div>
+    </div>
+
+    <!-- Main Content: Images & Commercial Specs -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Gallery Images -->
+        <div class="lg:col-span-7 space-y-4">
+            <div class="h-80 sm:h-96 rounded-3xl bg-gray-100 overflow-hidden border border-gray-200 relative">
+                <template x-if="currentImg">
+                    <img :src="currentImg" class="w-full h-full object-cover">
+                </template>
+                <template x-if="!currentImg">
+                    <div class="w-full h-full bg-emerald-50 flex items-center justify-center text-emerald-700">
+                        <i data-lucide="sprout" class="w-16 h-16"></i>
+                    </div>
+                </template>
+                <span class="absolute top-4 left-4 badge badge-success text-xs">{{ crop.get_quality_grade_display }}</span>
+            </div>
+
+            <!-- Thumbnail Carousel/Row -->
+            {% if gallery or crop.featured_image %}
+            <div class="flex items-center gap-3 overflow-x-auto pb-2">
+                {% if crop.featured_image %}
+                <button type="button" @click="currentImg = '{{ crop.featured_image.url }}'" class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-emerald-500 flex-shrink-0 focus:outline-none">
+                    <img src="{{ crop.featured_image.url }}" class="w-full h-full object-cover">
+                </button>
+                {% endif %}
+                {% for g in gallery %}
+                <button type="button" @click="currentImg = '{{ g.image.url }}'" class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-200 hover:border-emerald-500 flex-shrink-0 focus:outline-none">
+                    <img src="{{ g.image.url }}" class="w-full h-full object-cover">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Description -->
+            <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-3 shadow-sm">
+                <h3 class="font-heading font-bold text-base text-forest-900">Crop Description & Quality Characteristics</h3>
+                <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ crop.description }}</p>
+            </div>
+        </div>
+
+        <!-- Specifications & Sourcing Map -->
+        <div class="lg:col-span-5 space-y-6">
+            <!-- Commercials Card -->
+            <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-4 shadow-sm">
+                <h3 class="font-heading font-bold text-base text-forest-900">Commercial Specifications</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Rate / {{ crop.unit }}:</span>
+                        <span class="font-extrabold text-emerald-700 text-lg">₹{{ crop.price_per_unit }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Min Acceptable Rate:</span>
+                        <span class="font-semibold text-gray-900">₹{{ crop.minimum_acceptable_price|default:crop.price_per_unit }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Remaining Inventory:</span>
+                        <span class="font-bold text-forest-900">{{ crop.quantity_remaining }} {{ crop.unit }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Total Listed Quantity:</span>
+                        <span class="font-semibold text-gray-900">{{ crop.quantity_available }} {{ crop.unit }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Min Order Quantity:</span>
+                        <span class="font-semibold text-gray-900">{{ crop.minimum_order_quantity|default:"1" }} {{ crop.unit }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Expected Harvest:</span>
+                        <span class="font-semibold text-gray-900">{{ crop.expected_harvest_date|date:"d M Y"|default:"Immediate" }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Delivery Conditions:</span>
+                        <span class="font-semibold text-gray-900">{{ crop.delivery_conditions|default:"Farm Gate Handover" }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5">
+                        <span class="text-gray-500">Logistics Availability:</span>
+                        <span class="font-semibold text-gray-900">{{ crop.delivery_location_availability|default:"Pickup Available" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Geographic Sourcing Location Map -->
+            <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-3 shadow-sm">
+                <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Farm Sourcing Hub</span>
+                </h3>
+                <div id="cropDetailMap" class="h-52 rounded-2xl border border-gray-200 z-10"></div>
+                <div class="text-xs text-gray-500">{{ crop.village|default:"" }} {{ crop.district }}, {{ crop.state }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lat = {{ crop.latitude|default:"28.6139" }};
+    const lng = {{ crop.longitude|default:"77.2090" }};
+    const map = L.map('cropDetailMap').setView([lat, lng], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    L.circle([lat, lng], {
+        color: '#059669',
+        fillColor: '#10b981',
+        fillOpacity: 0.25,
+        radius: 4000
+    }).addTo(map).bindPopup("<b>{{ crop.title }}</b><br/>{{ crop.district }}, {{ crop.state }}");
+});
+</script>
+{% endblock %}

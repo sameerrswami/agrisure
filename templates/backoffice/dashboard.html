@@ -1,0 +1,368 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}AgriSure Platform Governance & Analytics{% endblock %}
+{% block dashboard_title %}Administrator Command Center{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'layouts/admin_sidebar.html' %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-8 max-w-7xl mx-auto">
+    <!-- Platform Analytics KPIs (12 Database-backed Metrics) -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- 1. Users -->
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Total Users</span>
+            <div class="font-heading text-2xl font-extrabold text-gray-900 mt-1">{{ total_users }}</div>
+            <span class="text-[11px] text-gray-500 mt-0.5 block">{{ total_farmers }} Farmers • {{ total_buyers }} Buyers</span>
+        </div>
+
+        <!-- 2. Verified Farmers -->
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Verified Farmers</span>
+            <div class="font-heading text-2xl font-extrabold text-emerald-700 mt-1">{{ verified_farmers }}</div>
+            <span class="text-[11px] text-emerald-600 mt-0.5 block">KYC Certified Producers</span>
+        </div>
+
+        <!-- 3. Verified Buyers -->
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Verified Buyers</span>
+            <div class="font-heading text-2xl font-extrabold text-blue-700 mt-1">{{ verified_buyers }}</div>
+            <span class="text-[11px] text-blue-600 mt-0.5 block">Approved Institutional</span>
+        </div>
+
+        <!-- 4. Active Listings -->
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Active Crop Listings</span>
+            <div class="font-heading text-2xl font-extrabold text-forest-800 mt-1">{{ active_crop_listings }}</div>
+            <span class="text-[11px] text-gray-500 mt-0.5 block">Live in Marketplace</span>
+        </div>
+
+        <!-- 5. Total Contracts -->
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Total Contracts</span>
+            <div class="font-heading text-2xl font-extrabold text-purple-700 mt-1">{{ total_contracts }}</div>
+            <span class="text-[11px] text-purple-600 mt-0.5 block">{{ completed_contracts }} Done • {{ cancelled_contracts }} Void</span>
+        </div>
+
+        <!-- 6. Open Disputes -->
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Open Disputes</span>
+            <div class="font-heading text-2xl font-extrabold text-rose-600 mt-1">{{ open_disputes }}</div>
+            <span class="text-[11px] text-rose-500 mt-0.5 block">Active Mediation</span>
+        </div>
+    </div>
+
+    <!-- Financial Volume Banner -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-6 bg-gradient-to-r from-forest-950 to-emerald-900 text-white rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs uppercase tracking-wider text-emerald-300 font-semibold block">Total Platform Transaction Volume</span>
+                <div class="font-heading font-extrabold text-3xl text-emerald-100 mt-1">₹{{ total_transaction_value|floatformat:2 }}</div>
+                <span class="text-xs text-emerald-200 mt-0.5 block">Captured & Settled via Razorpay INR Gateway</span>
+            </div>
+            <div class="w-14 h-14 rounded-2xl bg-white/10 text-emerald-300 flex items-center justify-center font-bold text-2xl">
+                ₹
+            </div>
+        </div>
+
+        <div class="p-6 bg-gradient-to-r from-gray-900 to-amber-950 text-white rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs uppercase tracking-wider text-amber-300 font-semibold block">Active Contract Committed Balance</span>
+                <div class="font-heading font-extrabold text-3xl text-amber-100 mt-1">₹{{ pending_payment_amount|floatformat:2 }}</div>
+                <span class="text-xs text-amber-200 mt-0.5 block">Expected Deliverable Value under Production</span>
+            </div>
+            <div class="w-14 h-14 rounded-2xl bg-white/10 text-amber-300 flex items-center justify-center">
+                <i data-lucide="clock" class="w-7 h-7"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Six Charts Grid -->
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h3 class="font-heading font-bold text-lg text-gray-900">Analytics Intelligence & Platform Trends</h3>
+            <span class="text-xs text-gray-500">Live Database-Generated Telemetry</span>
+        </div>
+
+        <!-- Row 1: Time Series -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Chart 1: User Registrations -->
+            <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-900">User Registrations (Monthly)</h4>
+                        <p class="text-xs text-gray-400">Farmers vs Buyers onboarded</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">Growth</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="userRegistrationsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Monthly Contracts -->
+            <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-900">Contract Farming Agreements</h4>
+                        <p class="text-xs text-gray-400">Executed agreements per month</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700">Volume</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="monthlyContractsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Financial & Categories -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Chart 3: Monthly Transaction Value -->
+            <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-900">Monthly Transaction Value (INR)</h4>
+                        <p class="text-xs text-gray-400">Total settled escrow flow in ₹</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700">Revenue</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="monthlyVolumeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 4: Crop Category Distribution -->
+            <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-900">Crop Category Distribution</h4>
+                        <p class="text-xs text-gray-400">Listing inventory across agricultural sectors</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700">Market</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="cropCategoriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Rates (Completion & Success) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Chart 5: Contract Completion Rate -->
+            <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-900">Contract Lifecycle Health</h4>
+                        <p class="text-xs text-gray-400">Completed vs In Progress vs Disputed</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-50 text-teal-700">Fulfillment</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="contractCompletionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 6: Payment Success Rate -->
+            <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-900">Payment Gateway Success Rate</h4>
+                        <p class="text-xs text-gray-400">Captured vs Failed vs Refunded</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700">Gateway</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="paymentSuccessChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feeds & Activity Rows -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Contracts Feed -->
+        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h4 class="font-bold text-sm text-gray-900">Recent Contract Agreements</h4>
+                <a href="{% url 'backoffice:contracts' %}" class="text-xs text-emerald-700 font-semibold hover:underline">View All →</a>
+            </div>
+            <div class="space-y-3">
+                {% for c in recent_contracts %}
+                <div class="p-3 bg-gray-50 rounded-2xl flex items-center justify-between text-xs">
+                    <div>
+                        <a href="{% url 'contracts:detail' c.pk %}" class="font-mono font-bold text-emerald-800 hover:underline">#{{ c.contract_number }}</a>
+                        <span class="text-gray-500 block text-[11px]">{{ c.crop_listing.title }} • {{ c.farmer.get_full_name }} & {{ c.buyer.get_full_name }}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-bold text-gray-900">₹{{ c.total_amount|floatformat:2 }}</span>
+                        <span class="badge badge-secondary text-[10px] block mt-0.5">{{ c.get_status_display }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-xs text-gray-400 italic">No contracts recorded.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Audit Log Feed -->
+        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h4 class="font-bold text-sm text-gray-900">Administrator Security & Audit Trail</h4>
+                <span class="text-[11px] text-gray-400">Sensitive Actions</span>
+            </div>
+            <div class="space-y-3">
+                {% for log in audit_logs %}
+                <div class="p-3 bg-gray-50 rounded-2xl text-xs space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-forest-900">{{ log.action }}</span>
+                        <span class="text-[10px] text-gray-400">{{ log.created_at|date:"d M, H:i" }}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-600">{{ log.details }}</p>
+                    <span class="text-[10px] text-gray-400 block">By: {{ log.admin_user.email }}</span>
+                </div>
+                {% empty %}
+                <p class="text-xs text-gray-400 italic">No audit records yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Initialization Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const monthLabels = {{ month_labels_json|safe }};
+
+    // Chart 1: User Registrations
+    new Chart(document.getElementById('userRegistrationsChart'), {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [
+                {
+                    label: 'Farmers',
+                    data: {{ farmer_reg_json|safe }},
+                    backgroundColor: '#059669',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Buyers',
+                    data: {{ buyer_reg_json|safe }},
+                    backgroundColor: '#0284c7',
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+            plugins: { legend: { position: 'top' } }
+        }
+    });
+
+    // Chart 2: Monthly Contracts
+    new Chart(document.getElementById('monthlyContractsChart'), {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Contracts Created',
+                data: {{ monthly_contracts_json|safe }},
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2.5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+
+    // Chart 3: Monthly Volume (INR)
+    new Chart(document.getElementById('monthlyVolumeChart'), {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Settled Value (₹)',
+                data: {{ monthly_volume_json|safe }},
+                borderColor: '#7c3aed',
+                backgroundColor: 'rgba(124, 58, 237, 0.08)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2.5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) { return '₹' + value.toLocaleString(); }
+                    }
+                }
+            }
+        }
+    });
+
+    // Chart 4: Crop Categories
+    new Chart(document.getElementById('cropCategoriesChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ cat_labels_json|safe }},
+            datasets: [{
+                data: {{ cat_counts_json|safe }},
+                backgroundColor: ['#059669', '#10b981', '#34d399', '#6ee7b7', '#0284c7', '#38bdf8', '#fbbf24', '#f87171']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+
+    // Chart 5: Contract Completion Rate
+    new Chart(document.getElementById('contractCompletionChart'), {
+        type: 'pie',
+        data: {
+            labels: {{ contract_status_labels_json|safe }},
+            datasets: [{
+                data: {{ contract_status_counts_json|safe }},
+                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+
+    // Chart 6: Payment Success Rate
+    new Chart(document.getElementById('paymentSuccessChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ payment_status_labels_json|safe }},
+            datasets: [{
+                data: {{ payment_status_counts_json|safe }},
+                backgroundColor: ['#059669', '#f59e0b', '#ef4444', '#8b5cf6']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+});
+</script>
+{% endblock %}

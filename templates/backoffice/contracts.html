@@ -1,0 +1,116 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Contracts Ledger & Audits – AgriSure Backoffice{% endblock %}
+{% block dashboard_title %}Platform Contract Oversight & Audits{% endblock %}
+{% block sidebar_menu %}{% include 'layouts/admin_sidebar.html' %}{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Filters Toolbar -->
+    <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h3 class="font-heading font-bold text-lg text-gray-900">Platform Contracts Directory</h3>
+            <p class="text-xs text-gray-500">Legal agreements with digital signatures, ReportLab PDF contracts, and delivery tracking</p>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs flex-wrap">
+            <a href="{% url 'backoffice:contracts' %}" class="px-3 py-1.5 rounded-xl border {% if not current_status %}bg-forest-900 text-white border-forest-900{% else %}bg-gray-50 text-gray-700 border-gray-200{% endif %}">
+                All
+            </a>
+            <a href="?status=ACTIVE" class="px-3 py-1.5 rounded-xl border {% if current_status == 'ACTIVE' %}bg-forest-900 text-white border-forest-900{% else %}bg-gray-50 text-gray-700 border-gray-200{% endif %}">
+                Active
+            </a>
+            <a href="?status=COMPLETED" class="px-3 py-1.5 rounded-xl border {% if current_status == 'COMPLETED' %}bg-forest-900 text-white border-forest-900{% else %}bg-gray-50 text-gray-700 border-gray-200{% endif %}">
+                Completed
+            </a>
+            <a href="?status=DISPUTED" class="px-3 py-1.5 rounded-xl border {% if current_status == 'DISPUTED' %}bg-forest-900 text-white border-forest-900{% else %}bg-gray-50 text-gray-700 border-gray-200{% endif %}">
+                Disputed
+            </a>
+        </div>
+    </div>
+
+    <!-- Contracts Table -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="data-table w-full text-left">
+                <thead>
+                    <tr class="bg-gray-50/70 border-b border-gray-100 text-xs text-gray-500">
+                        <th class="p-4">Contract Number</th>
+                        <th class="p-4">Commodity / Crop</th>
+                        <th class="p-4">Farmer</th>
+                        <th class="p-4">Buyer</th>
+                        <th class="p-4">Total Value</th>
+                        <th class="p-4">Delivered</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-xs">
+                    {% for c in contracts %}
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="p-4">
+                            <a href="{% url 'contracts:detail' c.pk %}" class="font-mono font-bold text-emerald-800 hover:underline block">
+                                #{{ c.contract_number }}
+                            </a>
+                            <span class="text-[10px] text-gray-400">Created: {{ c.created_at|date:"d M Y" }}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="font-semibold text-gray-900 block">{{ c.crop_listing.title }}</span>
+                            <span class="text-gray-500 text-[11px]">{{ c.quantity }} {{ c.unit }} @ ₹{{ c.price_per_unit }}/{{ c.unit }}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="font-medium text-gray-900">{{ c.farmer.get_full_name }}</span>
+                            <span class="block text-[10px] text-gray-400">{{ c.farmer.email }}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="font-medium text-gray-900">{{ c.buyer.get_full_name }}</span>
+                            <span class="block text-[10px] text-gray-400">{{ c.buyer.email }}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="font-heading font-bold text-sm text-gray-900">₹{{ c.total_amount|floatformat:2 }}</span>
+                            {% if c.is_fully_paid %}
+                                <span class="badge badge-success text-[9px] block w-fit mt-0.5">Fully Paid</span>
+                            {% elif c.is_advance_paid %}
+                                <span class="badge text-[9px] bg-blue-50 text-blue-700 block w-fit mt-0.5">Advance Paid</span>
+                            {% else %}
+                                <span class="badge badge-warning text-[9px] block w-fit mt-0.5">Advance Pending</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            <div class="w-24 bg-gray-100 rounded-full h-2 mb-1 overflow-hidden">
+                                <div class="bg-emerald-600 h-2 rounded-full" style="width: {{ c.delivery_progress_pct }}%"></div>
+                            </div>
+                            <span class="text-[10px] font-semibold text-gray-600">{{ c.delivery_progress_pct }}% ({{ c.total_delivered_quantity }}/{{ c.quantity }})</span>
+                        </td>
+                        <td class="p-4">
+                            {% if c.status == 'COMPLETED' %}
+                                <span class="badge badge-success text-[10px]">Completed</span>
+                            {% elif c.status == 'DISPUTED' %}
+                                <span class="badge badge-danger text-[10px]">Disputed</span>
+                            {% elif c.status == 'CANCELLED' %}
+                                <span class="badge badge-secondary text-[10px]">Cancelled</span>
+                            {% else %}
+                                <span class="badge badge-info text-[10px]">{{ c.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
+                            <a href="{% url 'contracts:detail' c.pk %}" class="btn btn-secondary py-1.5 px-2.5 text-[11px]">
+                                View
+                            </a>
+                            <a href="{% url 'contracts:download_pdf' c.pk %}" class="btn btn-primary py-1.5 px-2.5 text-[11px] inline-flex items-center gap-1">
+                                <i data-lucide="download" class="w-3 h-3"></i> PDF
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="p-12 text-center text-sm text-gray-400">
+                            No contracts found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

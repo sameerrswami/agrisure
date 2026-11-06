@@ -1,0 +1,81 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Lodge Dispute – AgriSure{% endblock %}
+{% block dashboard_title %}Lodge Formal Contract Grievance{% endblock %}
+{% block sidebar_menu %}
+    {% if user.is_farmer %}{% include 'layouts/farmer_sidebar.html' %}{% else %}{% include 'layouts/buyer_sidebar.html' %}{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-3xl mx-auto py-6">
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
+        <!-- Banner -->
+        <div class="bg-gradient-to-r from-red-900 to-amber-900 p-8 text-white">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                    <i data-lucide="shield-alert" class="w-5 h-5 text-amber-300"></i>
+                </div>
+                <div>
+                    <span class="text-xs uppercase tracking-wider text-amber-300 font-semibold">AgriSure Neutral Arbitration</span>
+                    <h2 class="font-heading text-2xl font-bold tracking-tight">Formal Dispute Lodgment</h2>
+                </div>
+            </div>
+            <p class="text-xs text-amber-200 mt-1">
+                Contract Ref: #{{ contract.contract_number }} • Respondent: {{ against_party.get_full_name }}
+            </p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-700 space-y-1">
+                {% for field, errors in form.errors.items %}
+                    <p><b>{{ field|title }}:</b> {{ errors|join:", " }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Category -->
+            <div>
+                <label class="form-label text-xs font-bold text-gray-700">Dispute Category *</label>
+                {{ form.category }}
+                <span class="text-[11px] text-gray-400 mt-1 block">Select the primary nature of discrepancy (Quality, Quantity, Delay, Damage, Payment, Breach)</span>
+            </div>
+
+            <!-- Title -->
+            <div>
+                <label class="form-label text-xs font-bold text-gray-700">Grievance Summary / Title *</label>
+                {{ form.title }}
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="form-label text-xs font-bold text-gray-700">Comprehensive Statement of Facts *</label>
+                {{ form.description }}
+                <span class="text-[11px] text-gray-400 mt-1 block">Detail dates, batches, discrepancies observed, weighbridge differences, or payment withheld.</span>
+            </div>
+
+            <!-- Evidence Attachment -->
+            <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
+                <label class="form-label text-xs font-bold text-gray-700">Supporting Evidence Document / Photo</label>
+                {{ form.evidence_file }}
+                <span class="text-[11px] text-gray-400 block">Attach lab quality reports, weighbridge slips, delivery photos, or bank statements (PDF, JPG, PNG).</span>
+            </div>
+
+            <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                <b>Notice:</b> Submitting a dispute places Contract #{{ contract.contract_number }} under <i>DISPUTED</i> status. 
+                Platform administrators will review provided documentation and schedule mediation with both parties within 7 business days.
+            </div>
+
+            <div class="flex items-center gap-4 pt-4 border-t border-gray-100">
+                <button type="submit" class="btn btn-danger py-3 px-6 text-sm font-bold flex-1 shadow-md shadow-red-700/20">
+                    Lodge Formal Dispute
+                </button>
+                <a href="{% url 'contracts:detail' contract.pk %}" class="btn btn-secondary py-3 px-6 text-xs">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

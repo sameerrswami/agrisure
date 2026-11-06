@@ -1,0 +1,17 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Start Negotiation – AgriSure{% endblock %}
+{% block dashboard_title %}Propose Price Offer{% endblock %}
+{% block sidebar_menu %}{% include 'layouts/buyer_sidebar.html' %}{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-2xl mx-auto">
+    <div class="glass-card p-8 bg-white rounded-3xl border border-gray-200 shadow-xl space-y-5">
+        <h2 class="font-heading text-2xl font-bold text-forest-900">Negotiate for {{ crop.title }}</h2>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary w-full py-3 mt-4">Submit Initial Offer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

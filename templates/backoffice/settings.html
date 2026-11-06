@@ -1,0 +1,133 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Platform Settings – AgriSure Backoffice{% endblock %}
+{% block dashboard_title %}Global Platform Configuration & Marketplace Policies{% endblock %}
+{% block sidebar_menu %}{% include 'layouts/admin_sidebar.html' %}{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto py-6">
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
+        <!-- Banner -->
+        <div class="bg-gradient-to-r from-forest-900 to-emerald-800 p-8 text-white flex items-center justify-between">
+            <div>
+                <span class="text-xs uppercase tracking-wider text-emerald-300 font-semibold block">Platform Governance</span>
+                <h2 class="font-heading text-2xl font-bold tracking-tight mt-1">Platform Parameters & Policies</h2>
+                <p class="text-xs text-emerald-200 mt-1">Configure customer support, platform facilitation fees, and document upload policies</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-300">
+                <i data-lucide="sliders" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <form method="POST" class="p-8 space-y-8">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-700 space-y-1">
+                {% for field, errors in form.errors.items %}
+                    <p><b>{{ field|title }}:</b> {{ errors|join:", " }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Section 1: Platform & Contact Information -->
+            <div class="space-y-4">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-forest-900 border-b border-gray-100 pb-2 flex items-center gap-2">
+                    <i data-lucide="building" class="w-4 h-4 text-emerald-600"></i> Platform & Support Contact Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label text-xs font-bold text-gray-700">Platform Brand Name</label>
+                        {{ form.platform_name }}
+                    </div>
+                    <div>
+                        <label class="form-label text-xs font-bold text-gray-700">Support Email Address</label>
+                        {{ form.support_email }}
+                    </div>
+                    <div>
+                        <label class="form-label text-xs font-bold text-gray-700">Support Phone Number</label>
+                        {{ form.support_phone }}
+                    </div>
+                    <div>
+                        <label class="form-label text-xs font-bold text-gray-700">Emergency Helpline (Toll-Free)</label>
+                        {{ form.emergency_helpline }}
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label text-xs font-bold text-gray-700">Headquarters Registered Office Address</label>
+                    {{ form.office_address }}
+                </div>
+                <div>
+                    <label class="form-label text-xs font-bold text-gray-700">Mediation Support Working Hours</label>
+                    {{ form.working_hours }}
+                </div>
+            </div>
+
+            <!-- Section 2: Marketplace Financial & Operational Policies -->
+            <div class="space-y-4">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-forest-900 border-b border-gray-100 pb-2 flex items-center gap-2">
+                    <i data-lucide="scale" class="w-4 h-4 text-emerald-600"></i> Marketplace Economics & Dispute Policy
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="form-label text-xs font-bold text-gray-700">Platform Commission (%)</label>
+                        {{ form.platform_commission_pct }}
+                        <span class="text-[10px] text-gray-400 mt-1 block">Contract facilitation rate</span>
+                    </div>
+                    <div>
+                        <label class="form-label text-xs font-bold text-gray-700">Minimum Contract Value (INR)</label>
+                        {{ form.min_contract_value }}
+                        <span class="text-[10px] text-gray-400 mt-1 block">Baseline threshold for binding agreements</span>
+                    </div>
+                    <div>
+                        <label class="form-label text-xs font-bold text-gray-700">Dispute Mediation SLA (Days)</label>
+                        {{ form.dispute_sla_days }}
+                        <span class="text-[10px] text-gray-400 mt-1 block">Target days to resolution</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: File Upload & Security Safeguards -->
+            <div class="space-y-4">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-forest-900 border-b border-gray-100 pb-2 flex items-center gap-2">
+                    <i data-lucide="shield" class="w-4 h-4 text-emerald-600"></i> Security & Communication Notifications
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label text-xs font-bold text-gray-700">Max Allowed Upload Size (MB)</label>
+                        {{ form.max_upload_size_mb }}
+                        <span class="text-[10px] text-gray-400 mt-1 block">Applies to KYC, proof-of-delivery & dispute evidence</span>
+                    </div>
+                    <div class="space-y-2 pt-3">
+                        <div class="flex items-center gap-2">
+                            {{ form.email_notifications_enabled }}
+                            <label class="text-xs text-gray-700 font-semibold">Automated Email Notifications Enabled</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            {{ form.sms_notifications_enabled }}
+                            <label class="text-xs text-gray-700 font-semibold">SMS Alert Dispatch Enabled</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-xs text-emerald-900 flex items-start gap-3">
+                <i data-lucide="lock" class="w-4 h-4 text-emerald-700 mt-0.5 flex-shrink-0"></i>
+                <div>
+                    <b>Security Architecture Notice:</b> Payment gateway secrets (Razorpay Key ID and Secret) and webhook signing tokens are loaded securely from server environment variables. They are never stored in the database or exposed through frontend input fields.
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 pt-4 border-t border-gray-100">
+                <button type="submit" class="btn btn-primary py-3 px-8 text-sm font-bold flex-1 shadow-md shadow-emerald-700/20">
+                    Save Platform Configuration
+                </button>
+                <a href="{% url 'backoffice:dashboard' %}" class="btn btn-secondary py-3 px-6 text-xs">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

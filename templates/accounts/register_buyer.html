@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Buyer Registration – AgriSure{% endblock %}
+
+{% block content %}
+<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-lg space-y-6">
+        <div class="text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wider mb-2">
+                🏢 Corporate / Buyer Account
+            </div>
+            <h2 class="font-heading text-3xl font-extrabold text-forest-900">Procure with AgriSure</h2>
+            <p class="text-sm text-gray-600">Contract directly with vetted agricultural producers nationwide.</p>
+        </div>
+
+        <div class="glass-card p-8 bg-white/95 rounded-3xl border border-gray-200/80 shadow-2xl">
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label">Company / Business Name *</label>
+                    {{ form.company_name }}
+                    {% if form.company_name.errors %}<div class="form-error">{{ form.company_name.errors }}</div>{% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label">Contact First Name *</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact Last Name *</label>
+                        {{ form.last_name }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Official Email Address *</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="form-error">{{ form.email.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Business Phone Number *</label>
+                    {{ form.phone }}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label">Password *</label>
+                        {{ form.password }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        {{ form.password_confirm }}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-secondary w-full py-3.5 text-base font-semibold border-teal-300 text-teal-800 hover:bg-teal-50">
+                    Create Buyer Account
+                </button>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-gray-100 text-center text-sm text-gray-600">
+                Already registered? <a href="{% url 'accounts:login' %}" class="font-bold text-emerald-700 hover:underline">Log In</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

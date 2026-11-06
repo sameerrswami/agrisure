@@ -1,0 +1,43 @@
+<div class="space-y-1">
+    <div class="text-[10px] uppercase font-bold text-gray-400 tracking-wider px-3 mb-2">Buyer Portal</div>
+    <a href="{% url 'buyers:dashboard' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="{% url 'marketplace:index' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="search" class="w-4 h-4"></i>
+        <span>Browse Marketplace</span>
+    </a>
+    <a href="{% url 'buyers:wishlist' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="heart" class="w-4 h-4"></i>
+        <span>Saved Crops (Wishlist)</span>
+    </a>
+    <a href="{% url 'contracts:list' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="file-check" class="w-4 h-4"></i>
+        <span>My Contracts</span>
+    </a>
+    <a href="{% url 'negotiations:list' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="scale" class="w-4 h-4"></i>
+        <span>Negotiations</span>
+    </a>
+    <a href="{% url 'deliveries:list' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="truck" class="w-4 h-4"></i>
+        <span>Delivery Tracking</span>
+    </a>
+    <a href="{% url 'payments:list' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="credit-card" class="w-4 h-4"></i>
+        <span>Payments & Escrow</span>
+    </a>
+    <a href="{% url 'disputes:list' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+        <span>Dispute Center</span>
+    </a>
+    <a href="{% url 'reviews:list' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="star" class="w-4 h-4"></i>
+        <span>Ratings & Reviews</span>
+    </a>
+    <a href="{% url 'buyers:profile' %}" class="sidebar-nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+        <i data-lucide="building-2" class="w-4 h-4"></i>
+        <span>Company Profile</span>
+    </a>
+</div>

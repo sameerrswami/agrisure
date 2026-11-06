@@ -1,0 +1,142 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Post New Crop Listing – AgriSure{% endblock %}
+{% block dashboard_title %}Create Crop Listing{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'layouts/farmer_sidebar.html' %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto">
+    <div class="glass-card p-8 bg-white rounded-3xl border border-gray-200 shadow-xl space-y-6">
+        <div>
+            <h2 class="font-heading text-2xl font-bold text-forest-900">List Your Agricultural Produce</h2>
+            <p class="text-sm text-gray-500 mt-1">Provide clear crop specifications to receive formal contract proposals.</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm">
+                Please correct the errors indicated below.
+                {{ form.errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="form-group sm:col-span-2">
+                    <label class="form-label">Crop Title *</label>
+                    {{ form.title }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    {{ form.category }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Seed / Crop Variety</label>
+                    {{ form.variety }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Farming Method *</label>
+                    {{ form.farming_type }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Crop Description & Quality Characteristics *</label>
+                {{ form.description }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Total Quantity *</label>
+                    {{ form.quantity_available }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit *</label>
+                    {{ form.unit }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expected Rate / Unit (₹) *</label>
+                    {{ form.price_per_unit }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Min Acceptable Rate (₹)</label>
+                    {{ form.minimum_acceptable_price }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Quality Grade</label>
+                    {{ form.quality_grade }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expected Harvest Date</label>
+                    {{ form.expected_harvest_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Min Order Quantity</label>
+                    {{ form.minimum_order_quantity }}
+                </div>
+            </div>
+
+            <h3 class="font-heading font-bold text-base text-forest-900 border-b border-gray-100 pb-2 pt-2">Location & Farm Gate</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Village / Farm</label>
+                    {{ form.village }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">District *</label>
+                    {{ form.district }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State *</label>
+                    {{ form.state }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pincode</label>
+                    {{ form.pincode }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Delivery Conditions</label>
+                    {{ form.delivery_conditions }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Logistics Availability</label>
+                    {{ form.delivery_location_availability }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Featured Image</label>
+                    {{ form.featured_image }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Additional Photos (Multiple)</label>
+                    <input type="file" name="additional_images" multiple accept="image/*" class="form-input">
+                    <span class="text-[11px] text-gray-400">Select multiple crop photos for gallery</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Listing Status</label>
+                    {{ form.status }}
+                </div>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="btn btn-primary flex-1 py-3 text-base font-semibold">Publish Crop Listing</button>
+                <a href="{% url 'crops:list' %}" class="btn btn-secondary px-6">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Farm Profile & KYC – AgriSure{% endblock %}
+{% block dashboard_title %}Farm Details & Land Records{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'layouts/farmer_sidebar.html' %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-5xl mx-auto space-y-8">
+    <!-- Header with Profile Overview -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-100 overflow-hidden flex items-center justify-center border border-emerald-200">
+                {% if profile.profile_image %}
+                    <img src="{{ profile.profile_image.url }}" alt="{{ user.get_full_name }}" class="w-full h-full object-cover">
+                {% else %}
+                    <i data-lucide="user" class="w-8 h-8 text-emerald-700"></i>
+                {% endif %}
+            </div>
+            <div>
+                <h2 class="font-heading text-2xl font-bold text-forest-900">{{ profile.farm_name|default:"My Agricultural Farm" }}</h2>
+                <div class="text-sm text-gray-600 font-medium">{{ user.get_full_name }} • {{ user.phone|default:"Mobile not set" }} • {{ user.email }}</div>
+                <div class="text-xs text-gray-400 mt-0.5">Village: {{ profile.village|default:"Not specified" }}, {{ profile.district|default:"District not set" }}, {{ profile.state|default:"State not set" }}</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'farmers:profile_edit' %}" class="btn btn-primary text-sm flex items-center gap-2">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                <span>Edit Farm Profile</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- KYC & Verification Document Banner (Prompt 2 Section 2) -->
+    <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+            <div>
+                <div class="text-xs uppercase font-bold tracking-wider text-gray-400">Account KYC Verification</div>
+                <div class="text-lg font-bold text-gray-900 mt-1 flex items-center gap-2">
+                    {% if profile.verification_status == 'VERIFIED' %}
+                        <span class="text-emerald-700 flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full text-sm font-semibold border border-emerald-200">
+                            <i data-lucide="badge-check" class="w-4 h-4 text-emerald-600"></i> Government Verified Producer
+                        </span>
+                    {% elif profile.verification_status == 'PENDING' %}
+                        <span class="text-amber-700 flex items-center gap-1.5 bg-amber-50 px-3 py-1 rounded-full text-sm font-semibold border border-amber-200">
+                            <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i> KYC Documents Under Verification
+                        </span>
+                    {% elif profile.verification_status == 'REJECTED' %}
+                        <span class="text-rose-700 flex items-center gap-1.5 bg-rose-50 px-3 py-1 rounded-full text-sm font-semibold border border-rose-200">
+                            <i data-lucide="x-circle" class="w-4 h-4 text-rose-600"></i> Verification Rejected
+                        </span>
+                    {% else %}
+                        <span class="text-gray-600 flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-full text-sm font-semibold">
+                            <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400"></i> Documents Not Submitted
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Profile Completion Progress -->
+            <div class="text-right">
+                <div class="text-xs text-gray-400">Profile Completion</div>
+                <div class="text-base font-extrabold text-forest-900">{{ profile.completion_percentage }}%</div>
+                <div class="w-28 h-2 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                    <div class="h-full bg-emerald-600 rounded-full" style="width: {{ profile.completion_percentage }}%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Notes if Rejected -->
+        {% if profile.verification_status == 'REJECTED' and profile.verification_notes %}
+        <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800">
+            <span class="font-bold">Rejection Reason:</span> {{ profile.verification_notes }}
+            <p class="mt-1 text-rose-600">Please re-upload a clear government identity or land registry document below.</p>
+        </div>
+        {% endif %}
+
+        <!-- Document Preview & Upload Control -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <!-- Document Preview Card -->
+            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                        <i data-lucide="file-check" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-gray-900">Current KYC Document</div>
+                        {% if profile.verification_document %}
+                            <div class="text-[11px] text-gray-500 truncate max-w-xs">{{ profile.verification_document.name }}</div>
+                        {% else %}
+                            <div class="text-[11px] text-gray-400">No document on file</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if profile.verification_document %}
+                <a href="{{ profile.verification_document.url }}" target="_blank" class="btn btn-secondary text-xs py-1.5 px-3 flex items-center gap-1">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                    <span>Preview Document</span>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Upload / Re-Upload Form -->
+            {% if profile.verification_status != 'VERIFIED' %}
+            <form method="post" action="{% url 'farmers:submit_verification' %}" enctype="multipart/form-data" class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center justify-between gap-3">
+                {% csrf_token %}
+                <div class="flex-1">
+                    <div class="text-xs font-bold text-emerald-900 mb-1">Upload Government Land Record / Aadhar / 7/12 Extract</div>
+                    <input type="file" name="verification_document" class="text-xs file:btn file:btn-secondary file:text-xs file:py-1 file:px-2.5 file:border-none" required>
+                </div>
+                <button type="submit" class="btn btn-primary text-xs py-2 px-3 font-semibold whitespace-nowrap">
+                    Submit for Review
+                </button>
+            </form>
+            {% else %}
+            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3 text-emerald-800 text-xs">
+                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+                <span>Your farm identity and land records have been verified by the AgriSure administrative panel.</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Farm Land & Agronomic Specifications -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-4 shadow-sm">
+            <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+                <i data-lucide="sprout" class="w-4 h-4 text-emerald-600"></i>
+                <span>Agronomic & Farm Profile</span>
+            </h3>
+            <div class="space-y-2.5 text-sm">
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Total Farm Size:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.farm_size|default:"0" }} Acres</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Farming Methods:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.farming_methods|default:"Traditional / Conventional" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Irrigation Setup:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.irrigation_facilities|default:"Tube Well / Canal" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Experience:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.farming_experience_years }} Years</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Organic Certification:</span>
+                    <span class="font-semibold text-gray-900">{% if profile.organic_certified %}Yes (Certified Organic){% else %}Conventional{% endif %}</span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-gray-500">Physical Address:</span>
+                    <span class="font-semibold text-gray-900 text-right">{{ profile.farm_address|default:"Not specified" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-4 shadow-sm">
+            <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+                <i data-lucide="credit-card" class="w-4 h-4 text-emerald-600"></i>
+                <span>Direct Bank Settlement Details</span>
+            </h3>
+            <div class="space-y-2.5 text-sm">
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Bank Name:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.bank_name|default:"Not configured" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Account Number:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.bank_account_number|default:"Not configured" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">IFSC Code:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.ifsc_code|default:"Not configured" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">PAN Number:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.pan_number|default:"Not provided" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-gray-500">Aadhar Reference:</span>
+                    <span class="font-semibold text-gray-900">{% if profile.aadhar_number %}•••• •••• {{ profile.aadhar_number|slice:"-4:" }}{% else %}Not provided{% endif %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Farm Map Location (Leaflet) -->
+    <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-4 shadow-sm">
+        <div class="flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                <span>Registered Farm Geographic Coordinates</span>
+            </h3>
+            <span class="text-xs text-gray-500">Lat: {{ profile.latitude|default:"28.6139" }}, Lng: {{ profile.longitude|default:"77.2090" }}</span>
+        </div>
+        <div id="farmMap" class="h-64 rounded-2xl border border-gray-200 z-10"></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lat = {{ profile.latitude|default:"28.6139" }};
+    const lng = {{ profile.longitude|default:"77.2090" }};
+    const map = L.map('farmMap').setView([lat, lng], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    L.marker([lat, lng]).addTo(map)
+        .bindPopup("<b>{{ profile.farm_name|default:'Farm Location' }}</b><br/>{{ profile.district }}, {{ profile.state }}")
+        .openPopup();
+});
+</script>
+{% endblock %}

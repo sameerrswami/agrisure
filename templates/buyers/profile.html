@@ -1,0 +1,171 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% block title %}Company Profile & KYC – AgriSure{% endblock %}
+{% block dashboard_title %}Corporate Procurement Profile{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'layouts/buyer_sidebar.html' %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-5xl mx-auto space-y-8">
+    <!-- Header Card -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-teal-100 overflow-hidden flex items-center justify-center border border-teal-200">
+                {% if profile.company_logo %}
+                    <img src="{{ profile.company_logo.url }}" alt="{{ profile.company_name }}" class="w-full h-full object-cover">
+                {% else %}
+                    <i data-lucide="building-2" class="w-8 h-8 text-teal-700"></i>
+                {% endif %}
+            </div>
+            <div>
+                <h2 class="font-heading text-2xl font-bold text-forest-900">{{ profile.company_name|default:"Company Profile" }}</h2>
+                <div class="text-sm text-gray-600 font-medium">
+                    {{ profile.get_business_type_display|default:"Agricultural Processor" }} • {{ profile.contact_person|default:user.get_full_name }} • {{ user.email }}
+                </div>
+                <div class="text-xs text-gray-400 mt-0.5">
+                    Phone: {{ user.phone|default:"Not specified" }} • {{ profile.city|default:"City not set" }}, {{ profile.state|default:"State not set" }}
+                </div>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'buyers:profile_edit' %}" class="btn btn-primary text-sm flex items-center gap-2">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                <span>Edit Profile</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Corporate Verification Status Banner (Prompt 2 Section 5) -->
+    <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+            <div>
+                <div class="text-xs uppercase font-bold tracking-wider text-gray-400">Institutional Verification Status</div>
+                <div class="text-lg font-bold text-gray-900 mt-1 flex items-center gap-2">
+                    {% if profile.verification_status == 'VERIFIED' %}
+                        <span class="text-emerald-700 flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full text-sm font-semibold border border-emerald-200">
+                            <i data-lucide="badge-check" class="w-4 h-4 text-emerald-600"></i> Verified Corporate Procurement Entity
+                        </span>
+                    {% elif profile.verification_status == 'PENDING' %}
+                        <span class="text-amber-700 flex items-center gap-1.5 bg-amber-50 px-3 py-1 rounded-full text-sm font-semibold border border-amber-200">
+                            <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i> Verification Under Review
+                        </span>
+                    {% elif profile.verification_status == 'REJECTED' %}
+                        <span class="text-rose-700 flex items-center gap-1.5 bg-rose-50 px-3 py-1 rounded-full text-sm font-semibold border border-rose-200">
+                            <i data-lucide="x-circle" class="w-4 h-4 text-rose-600"></i> Verification Rejected
+                        </span>
+                    {% else %}
+                        <span class="text-gray-600 flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-full text-sm font-semibold">
+                            <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400"></i> Not Submitted
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Verification Document Preview -->
+            {% if profile.verification_document %}
+            <a href="{{ profile.verification_document.url }}" target="_blank" class="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5">
+                <i data-lucide="file-check" class="w-4 h-4 text-teal-700"></i>
+                <span>Preview Uploaded KYC</span>
+            </a>
+            {% endif %}
+        </div>
+
+        {% if profile.verification_status == 'REJECTED' and profile.verification_notes %}
+        <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800">
+            <span class="font-bold">Rejection Feedback:</span> {{ profile.verification_notes }}
+            <p class="mt-1 text-rose-600">Please upload valid GSTIN or Corporate Certificate of Incorporation below.</p>
+        </div>
+        {% endif %}
+
+        <!-- Document Upload Form -->
+        {% if profile.verification_status != 'VERIFIED' %}
+        <form method="post" action="{% url 'buyers:submit_verification' %}" enctype="multipart/form-data" class="p-4 bg-teal-50/50 rounded-2xl border border-teal-100 flex items-center justify-between gap-3">
+            {% csrf_token %}
+            <div class="flex-1">
+                <div class="text-xs font-bold text-teal-900 mb-1">Upload Certificate of Incorporation / GST Certificate / Trade License</div>
+                <input type="file" name="verification_document" class="text-xs file:btn file:btn-secondary file:text-xs file:py-1 file:px-2.5 file:border-none" required>
+            </div>
+            <button type="submit" class="btn btn-primary text-xs py-2 px-3 font-semibold whitespace-nowrap">
+                Submit Document
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Procurement Criteria & Business Details -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Business Entity Records -->
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-4 shadow-sm">
+            <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+                <i data-lucide="briefcase" class="w-4 h-4 text-teal-600"></i>
+                <span>Corporate Legal Details</span>
+            </h3>
+            <div class="space-y-2.5 text-sm">
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">GSTIN:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.gstin|default:"Not provided" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">PAN Number:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.pan_number|default:"Not provided" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Registered Address:</span>
+                    <span class="font-semibold text-gray-900 text-right">{{ profile.business_address|default:"Not specified" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Primary Warehouse / Delivery Address:</span>
+                    <span class="font-semibold text-gray-900 text-right">{{ profile.delivery_address|default:"Not specified" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-gray-500">Website:</span>
+                    <span class="font-semibold text-teal-700">
+                        {% if profile.website %}
+                            <a href="{{ profile.website }}" target="_blank" class="hover:underline">{{ profile.website }}</a>
+                        {% else %}
+                            Not provided
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Procurement Preferences -->
+        <div class="glass-card p-6 bg-white rounded-3xl border border-gray-200 space-y-4 shadow-sm">
+            <h3 class="font-heading font-bold text-base text-forest-900 flex items-center gap-2">
+                <i data-lucide="target" class="w-4 h-4 text-emerald-600"></i>
+                <span>Sourcing & Procurement Parameters</span>
+            </h3>
+            <div class="space-y-2.5 text-sm">
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Preferred Crops:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.preferred_crops|default:"All Commodities" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Target Sourcing Locations:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.preferred_locations|default:"Pan-India" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Typical Quantities Required:</span>
+                    <span class="font-semibold text-gray-900">{{ profile.required_quantities|default:"Custom contract scale" }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">Annual Procurement Budget:</span>
+                    <span class="font-bold text-emerald-700">
+                        {% if profile.annual_procurement_budget %}
+                            ₹{{ profile.annual_procurement_budget|floatformat:0 }}
+                        {% else %}
+                            Not specified
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-gray-500">Procurement Overview:</span>
+                    <span class="font-normal text-gray-700 text-right text-xs max-w-xs">{{ profile.bio|default:"No description added." }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
