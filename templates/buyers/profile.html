@@ -28,10 +28,14 @@
                 </div>
             </div>
         </div>
-        <div>
+        <div class="flex items-center gap-2">
             <a href="{% url 'buyers:profile_edit' %}" class="btn btn-primary text-sm flex items-center gap-2">
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
                 <span>Edit Profile</span>
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-danger text-sm flex items-center gap-2" title="Sign out of corporate account">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Log Out</span>
             </a>
         </div>
     </div>

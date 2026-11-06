@@ -126,13 +126,7 @@
             {% for crop in metrics.recommended_crops %}
             <div class="glass-card bg-white rounded-3xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-xl transition-shadow group">
                 <div class="h-44 bg-gray-100 relative overflow-hidden">
-                    {% if crop.featured_image %}
-                        <img src="{{ crop.featured_image.url }}" alt="{{ crop.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                    {% else %}
-                        <div class="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700">
-                            <i data-lucide="sprout" class="w-12 h-12"></i>
-                        </div>
-                    {% endif %}
+                    <img src="{{ crop.image_url }}" alt="{{ crop.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80';">
                     <span class="absolute top-3 right-3 badge badge-success text-[11px]">{{ crop.get_quality_grade_display }}</span>
                     {% if crop.farmer.farmer_profile.is_verified %}
                     <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
@@ -257,11 +251,7 @@
                 <div class="p-3 bg-gray-50/80 rounded-2xl border border-gray-100 flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0">
-                            {% if sc.crop_listing.featured_image %}
-                                <img src="{{ sc.crop_listing.featured_image.url }}" class="w-full h-full object-cover">
-                            {% else %}
-                                <div class="w-full h-full flex items-center justify-center text-gray-400"><i data-lucide="sprout" class="w-5 h-5"></i></div>
-                            {% endif %}
+                            <img src="{{ sc.crop_listing.image_url }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80';">
                         </div>
                         <div>
                             <div class="text-xs font-bold text-gray-900">{{ sc.crop_listing.title }}</div>

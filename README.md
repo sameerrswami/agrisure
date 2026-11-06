@@ -167,6 +167,13 @@ CA-Django/
 - **Dispute Docket**: Formal dispute management with evidence attachments, arbitration logs, and admin resolution rulings (Release Funds to Farmer / Refund Buyer / Split Escrow).
 - **Audit Trails**: Immutable administrative activity tracking via `AdminAuditLog`.
 
+### 8. Dual Theme System & Profile Management
+- **Black & White (Dark / Light) Dual Theme**: Instant, zero-flicker theme switching with Tailwind CSS `darkMode: 'class'`, persistent `localStorage` sync, and system preference detection.
+- **Profile Dropdown with One-Click Logout**: Dedicated user avatar menu in both public and dashboard headers with user info, role badge, theme switcher, and prominent **Log Out** button.
+- **Profile Page Logout Actions**: Clear logout controls on general, farmer, and buyer profile pages.
+- **Rich Agricultural Media**: Pillow-generated local sample media alongside high-definition Unsplash agricultural imagery fallbacks ensuring zero empty image placeholders across marketplace, wishlists, and produce details.
+
+
 ---
 
 ## 🔒 Security & Legal Compliance
@@ -273,7 +280,44 @@ The database seeder provisions pre-configured user accounts representing each pl
 
 ## 🚀 Production Deployment
 
-### Option A: Multi-Container Docker Deployment (Recommended)
+### Option A: Render Cloud Deployment (1-Click Blueprint)
+AgriSure comes pre-configured with [`render.yaml`](render.yaml) and [`build.sh`](build.sh) for zero-config automated deployment on Render:
+
+1. Push your code to your **GitHub** repository.
+2. Sign in to [Render Dashboard](https://dashboard.render.com/) and click **New + > Blueprint**.
+3. Select your GitHub repository. Render will automatically parse `render.yaml` and provision:
+   - Python Web Service (running Gunicorn with WhiteNoise static compression)
+   - PostgreSQL 15 Managed Database
+   - Redis 7 Instance
+4. In the Render Web Service settings, enter your optional **Razorpay** keys (`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`).
+5. Render automatically executes `build.sh` (collectstatic + migrations) and launches the application.
+
+---
+
+### Option B: Vercel Serverless Deployment
+AgriSure includes native [`vercel.json`](vercel.json) and [`build_files.sh`](build_files.sh) for serverless edge deployment on Vercel:
+
+1. Install the Vercel CLI (`npm i -g vercel`) or import your repository directly at [vercel.com](https://vercel.com).
+2. Set Environment Variables in your Vercel Project Settings:
+   - `SECRET_KEY`: `<your-random-secret-key>`
+   - `DEBUG`: `False`
+   - `DATABASE_URL`: Your hosted PostgreSQL connection string (e.g., Supabase, Neon, or Railway)
+   - `ALLOWED_HOSTS`: `.vercel.app`
+3. Deploy via CLI or Git push:
+   ```bash
+   vercel --prod
+   ```
+
+---
+
+### Option C: GitHub Actions CI/CD Pipeline
+Continuous integration is configured in [`.github/workflows/django-ci.yml`](.github/workflows/django-ci.yml):
+- Automatically triggers on every `push` and `pull_request` to `main` and `master`.
+- Sets up Python 3.9, installs pinned dependencies, verifies `python manage.py check`, checks WhiteNoise `collectstatic`, and runs the entire automated test suite (`python manage.py test`).
+
+---
+
+### Option D: Multi-Container Docker Deployment (Self-Hosted)
 AgriSure includes a production-ready `Dockerfile` and `docker-compose.yml`.
 
 ```bash
@@ -289,7 +333,9 @@ docker-compose exec web python seed_db.py
 ```
 The application will be live at `http://localhost:8000`.
 
-### Option B: Cloud PaaS Deployment (Render / Railway / Heroku)
+---
+
+### Option E: Cloud PaaS Deployment (Heroku / Railway)
 The project includes a production `Procfile` configured for containerized web and background worker execution:
 
 ```
@@ -299,17 +345,6 @@ worker: celery -A agrisure worker -l info --concurrency 2
 beat: celery -A agrisure beat -l info
 ```
 
-1. Connect your repository to the hosting provider.
-2. Configure environment variables in the provider's dashboard:
-   - `DEBUG=False`
-   - `SECRET_KEY=<generate-a-strong-random-key>`
-   - `DATABASE_URL=postgres://<user>:<password>@<host>:5432/<dbname>`
-   - `REDIS_URL=redis://<host>:6379/0`
-   - `ALLOWED_HOSTS=.yourdomain.com`
-   - `RAZORPAY_KEY_ID=<your-razorpay-key>`
-   - `RAZORPAY_KEY_SECRET=<your-razorpay-secret>`
-   - `RAZORPAY_WEBHOOK_SECRET=<your-webhook-secret>`
-3. Static files are automatically compiled and served via **WhiteNoise** with Gzip and Brotli compression.
 
 ---
 

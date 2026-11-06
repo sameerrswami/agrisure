@@ -28,6 +28,23 @@ from apps.payments.models import PayoutRecord, PaymentRefund
 from apps.disputes.models import Dispute, DisputeMessage
 from apps.deliveries.models import DeliveryUpdate
 from apps.backoffice.models import AdminAuditLog, ReportedListing, PlatformSetting
+import io
+from PIL import Image, ImageDraw
+from django.core.files.base import ContentFile
+
+def generate_sample_image(title, subtitle, bg_color=(5, 150, 105)):
+    """Generate high-contrast, stylized sample visual banners for test fixtures."""
+    img = Image.new('RGB', (800, 500), color=bg_color)
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([25, 25, 775, 475], outline=(255, 255, 255), width=3)
+    draw.rectangle([45, 45, 755, 455], fill=(0, 0, 0, 45))
+    draw.text((65, 160), title, fill=(255, 255, 255))
+    draw.text((65, 210), subtitle, fill=(210, 240, 230))
+    draw.text((65, 280), "AgriSure Verified Produce • Standard Quality", fill=(255, 255, 255))
+    buf = io.BytesIO()
+    img.save(buf, format='JPEG', quality=85)
+    return ContentFile(buf.getvalue())
+
 
 print("Clearing previous seed data...")
 AdminAuditLog.objects.all().delete()
@@ -81,7 +98,7 @@ farmer1 = User.objects.create_user(
     email_verified=True,
     profile_completed=True
 )
-FarmerProfile.objects.create(
+fp1 = FarmerProfile.objects.create(
     user=farmer1,
     farm_name='Kisan Green Acres Farm',
     farm_size=Decimal('25.5'),
@@ -102,6 +119,7 @@ FarmerProfile.objects.create(
     verification_status=FarmerProfile.VerificationStatus.VERIFIED,
     is_verified=True
 )
+fp1.profile_image.save('ramesh_kumar.jpg', generate_sample_image('Ramesh Kumar', 'Verified Organic Producer • Punjab', (4, 120, 87)), save=True)
 
 # Farmer 2: Suresh Patel (Gujarat)
 farmer2 = User.objects.create_user(
@@ -114,7 +132,7 @@ farmer2 = User.objects.create_user(
     email_verified=True,
     profile_completed=True
 )
-FarmerProfile.objects.create(
+fp2 = FarmerProfile.objects.create(
     user=farmer2,
     farm_name='Patel Agritech Estates',
     farm_size=Decimal('42.0'),
@@ -135,6 +153,7 @@ FarmerProfile.objects.create(
     verification_status=FarmerProfile.VerificationStatus.VERIFIED,
     is_verified=True
 )
+fp2.profile_image.save('suresh_patel.jpg', generate_sample_image('Suresh Patel', 'Natural ZBNF Farmer • Gujarat', (13, 148, 136)), save=True)
 
 print("Creating Institutional Buyers...")
 # Buyer 1: ITC Agri Business
@@ -148,7 +167,7 @@ buyer1 = User.objects.create_user(
     email_verified=True,
     profile_completed=True
 )
-BuyerProfile.objects.create(
+bp1 = BuyerProfile.objects.create(
     user=buyer1,
     company_name='ITC Agri Business Division',
     contact_person='Anand Verma (VP Procurement)',
@@ -166,6 +185,7 @@ BuyerProfile.objects.create(
     verification_status=BuyerProfile.VerificationStatus.VERIFIED,
     is_verified=True
 )
+bp1.company_logo.save('itc_agri.jpg', generate_sample_image('ITC Agri-Business', 'Corporate Institutional Processor', (30, 58, 138)), save=True)
 
 # Buyer 2: Nature Bio-Foods Ltd (Organic Exporter)
 buyer2 = User.objects.create_user(
@@ -178,7 +198,7 @@ buyer2 = User.objects.create_user(
     email_verified=True,
     profile_completed=True
 )
-BuyerProfile.objects.create(
+bp2 = BuyerProfile.objects.create(
     user=buyer2,
     company_name='Nature Bio-Foods Limited',
     contact_person='Priya Nair (Senior Sourcing Manager)',
@@ -193,6 +213,8 @@ BuyerProfile.objects.create(
     verification_status=BuyerProfile.VerificationStatus.VERIFIED,
     is_verified=True
 )
+bp2.company_logo.save('nature_bio.jpg', generate_sample_image('Nature Bio-Foods Ltd', 'Certified Organic Exporter', (15, 118, 110)), save=True)
+
 
 print("Creating Crop Listings...")
 crop1 = CropListing.objects.create(
@@ -222,6 +244,7 @@ crop1 = CropListing.objects.create(
     delivery_conditions='Jute gunny bags of 50kg each. Moisture testing certified prior to loading.',
     status=CropListing.Status.ACTIVE
 )
+crop1.featured_image.save('basmati_paddy.jpg', generate_sample_image('Organic Basmati Paddy', 'Pusa 1121 • Grade Premium', (4, 120, 87)), save=True)
 
 crop2 = CropListing.objects.create(
     farmer=farmer1,
@@ -242,6 +265,7 @@ crop2 = CropListing.objects.create(
     state='Punjab',
     status=CropListing.Status.ACTIVE
 )
+crop2.featured_image.save('sharbati_wheat.jpg', generate_sample_image('Golden Sharbati Wheat', 'Sehore Variety • Grade A', (217, 119, 6)), save=True)
 
 crop3 = CropListing.objects.create(
     farmer=farmer2,
@@ -262,6 +286,7 @@ crop3 = CropListing.objects.create(
     state='Gujarat',
     status=CropListing.Status.ACTIVE
 )
+crop3.featured_image.save('saurashtra_groundnut.jpg', generate_sample_image('Saurashtra Groundnut', 'GG-20 Bold Pods • 48% Oil', (180, 83, 9)), save=True)
 
 crop4 = CropListing.objects.create(
     farmer=farmer2,
@@ -282,6 +307,50 @@ crop4 = CropListing.objects.create(
     state='Gujarat',
     status=CropListing.Status.ACTIVE
 )
+crop4.featured_image.save('shankar_cotton.jpg', generate_sample_image('Shankar-6 Raw Cotton', '29mm+ Staple • Grade A', (37, 99, 235)), save=True)
+
+crop5 = CropListing.objects.create(
+    farmer=farmer1,
+    category=cat_spices,
+    title='Salem Finger Turmeric (High Curcumin 5.2%)',
+    variety='Salem Local',
+    description='Double-polished golden finger turmeric with natural 5.2% curcumin content. Sun-cured and tested free from heavy metals or artificial coloring agents.',
+    quantity_available=Decimal('120.00'),
+    quantity_remaining=Decimal('120.00'),
+    unit=CropListing.Unit.QUINTAL,
+    price_per_unit=Decimal('9200.00'),
+    minimum_acceptable_price=Decimal('8800.00'),
+    minimum_order_quantity=Decimal('10.00'),
+    quality_grade=CropListing.QualityGrade.PREMIUM,
+    farming_type=CropListing.FarmingType.ORGANIC,
+    expected_harvest_date=date.today() + timedelta(days=60),
+    district='Erode',
+    state='Tamil Nadu',
+    status=CropListing.Status.ACTIVE
+)
+crop5.featured_image.save('salem_turmeric.jpg', generate_sample_image('Salem Finger Turmeric', 'High Curcumin 5.2% • Organic', (194, 65, 12)), save=True)
+
+crop6 = CropListing.objects.create(
+    farmer=farmer2,
+    category=cat_oilseeds,
+    title='Non-GMO Certified Soybean (JS-335 Variety)',
+    variety='JS-335',
+    description='Premium clean yellow soybean with 39% protein and 19% oil content. Ideal for soya milk, tofu, and cold-pressed edible oil manufacturers.',
+    quantity_available=Decimal('500.00'),
+    quantity_remaining=Decimal('500.00'),
+    unit=CropListing.Unit.QUINTAL,
+    price_per_unit=Decimal('4600.00'),
+    minimum_acceptable_price=Decimal('4400.00'),
+    minimum_order_quantity=Decimal('50.00'),
+    quality_grade=CropListing.QualityGrade.GRADE_A,
+    farming_type=CropListing.FarmingType.CONVENTIONAL,
+    expected_harvest_date=date.today() + timedelta(days=20),
+    district='Indore',
+    state='Madhya Pradesh',
+    status=CropListing.Status.ACTIVE
+)
+crop6.featured_image.save('js335_soybean.jpg', generate_sample_image('Non-GMO Soybean JS-335', '39% Protein • High Oil Content', (77, 124, 15)), save=True)
+
 
 print("Creating Active Binding Contract...")
 contract1 = Contract.objects.create(

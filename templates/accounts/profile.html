@@ -2,26 +2,67 @@
 {% block title %}My Profile – AgriSure{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-12 space-y-6">
-    <div class="flex items-center justify-between">
-        <h1 class="font-heading text-2xl font-bold text-forest-900">User Account Settings</h1>
-        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary text-sm">Edit Profile</a>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-2xl font-bold text-forest-900 dark:text-white">User Account Settings</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Manage your credentials, theme preference, and session.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary text-sm flex items-center gap-2">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                <span>Edit Profile</span>
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-danger text-sm flex items-center gap-2">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Log Out</span>
+            </a>
+        </div>
     </div>
 
-    <div class="glass-card p-6 bg-white rounded-2xl border border-gray-200 flex items-center gap-6">
-        <div class="w-20 h-20 rounded-full bg-emerald-100 text-emerald-800 font-heading font-extrabold text-2xl flex items-center justify-center border-2 border-emerald-300">
-            {{ user.first_name|first }}{{ user.last_name|first }}
+    <div class="glass-card p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-5">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-heading font-extrabold text-2xl flex items-center justify-center border-2 border-emerald-300 dark:border-emerald-600 shadow-md">
+                {{ user.first_name|first }}{{ user.last_name|first }}
+            </div>
+            <div>
+                <div class="text-xl font-bold text-gray-900 dark:text-white">{{ user.get_full_name }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }} • Role: <span class="font-semibold text-emerald-700 dark:text-emerald-400">{{ user.get_role_display }}</span></div>
+                <div class="text-xs text-gray-400 mt-1">Joined AgriSure on {{ user.date_joined|date:"M d, Y" }}</div>
+            </div>
         </div>
         <div>
-            <div class="text-xl font-bold text-gray-900">{{ user.get_full_name }}</div>
-            <div class="text-sm text-gray-500">{{ user.email }} • Role: <span class="font-semibold text-emerald-700">{{ user.get_role_display }}</span></div>
-            <div class="text-xs text-gray-400 mt-1">Joined {{ user.date_joined|date:"M Y" }}</div>
+            <a href="{{ user.get_dashboard_url }}" class="btn btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5">
+                <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+                <span>Go to Dashboard</span>
+            </a>
         </div>
     </div>
 
-    <div class="glass-card p-6 bg-white rounded-2xl border border-gray-200 space-y-4">
-        <h3 class="font-bold text-gray-900">Security</h3>
-        <p class="text-sm text-gray-600">Keep your account safe by updating your password regularly.</p>
-        <a href="{% url 'accounts:change_password' %}" class="btn btn-outline text-sm">Change Password</a>
+    <!-- Theme Customization Section -->
+    <div class="glass-card p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 flex items-center justify-between">
+        <div>
+            <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="sun-moon" class="w-4 h-4 text-emerald-600"></i>
+                <span>Display Theme (Dual Theme Black & White)</span>
+            </h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Switch between dark mode (black theme) and light mode (white theme).</p>
+        </div>
+        <button onclick="toggleAgriSureTheme()" type="button" class="btn btn-secondary text-sm py-2 px-4 flex items-center gap-2">
+            <span class="block dark:hidden">Switch to Dark Theme 🌙</span>
+            <span class="hidden dark:block">Switch to Light Theme ☀️</span>
+        </button>
+    </div>
+
+    <div class="glass-card p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4">
+        <h3 class="font-bold text-gray-900 dark:text-white">Security & Password</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Keep your account safe by updating your password regularly.</p>
+        <div class="flex items-center gap-3 pt-2">
+            <a href="{% url 'accounts:change_password' %}" class="btn btn-outline text-sm">Change Password</a>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-danger text-sm flex items-center gap-2">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>End Active Session (Log Out)</span>
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -94,6 +94,17 @@ class User(AbstractUser):
             return reverse('backoffice:dashboard')
         return '/'
 
+    @property
+    def avatar_url(self):
+        if self.avatar:
+            try:
+                return self.avatar.url
+            except Exception:
+                pass
+        name = self.get_full_name() or self.username
+        return f"https://api.dicebear.com/7.x/initials/svg?seed={name}&backgroundColor=059669"
+
+
 
 class EmailVerificationToken(models.Model):
     """Token for email verification."""

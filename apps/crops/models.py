@@ -27,6 +27,26 @@ class CropCategory(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def image_url(self):
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                pass
+        cat_map = {
+            'grains': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=600&q=80',
+            'pulses': 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?auto=format&fit=crop&w=600&q=80',
+            'oilseeds': 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=600&q=80',
+            'spices': 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=600&q=80',
+            'commercial': 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=600&q=80',
+            'horticulture': 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=600&q=80',
+        }
+        for k, v in cat_map.items():
+            if k in self.name.lower():
+                return v
+        return 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80'
+
 
 class CropListing(models.Model):
     class Status(models.TextChoices):
@@ -140,6 +160,37 @@ class CropListing(models.Model):
     @property
     def total_estimated_value(self):
         return self.quantity_available * self.price_per_unit
+
+    @property
+    def image_url(self):
+        """Returns the uploaded featured image, or an authentic commodity photo fallback from web."""
+        if self.featured_image:
+            try:
+                return self.featured_image.url
+            except Exception:
+                pass
+        fallbacks = {
+            'wheat': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80',
+            'rice': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80',
+            'paddy': 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=800&q=80',
+            'cotton': 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=800&q=80',
+            'soybean': 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=800&q=80',
+            'mustard': 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80',
+            'sugarcane': 'https://images.unsplash.com/photo-1594488518063-88849b6b7a22?auto=format&fit=crop&w=800&q=80',
+            'turmeric': 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80',
+            'potato': 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
+            'maize': 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=800&q=80',
+            'corn': 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=800&q=80',
+            'chilli': 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=800&q=80',
+            'groundnut': 'https://images.unsplash.com/photo-1567892308964-b866504b2b2b?auto=format&fit=crop&w=800&q=80',
+            'peanut': 'https://images.unsplash.com/photo-1567892308964-b866504b2b2b?auto=format&fit=crop&w=800&q=80',
+        }
+        title_text = (self.title + ' ' + (self.category.name if self.category else '')).lower()
+        for k, url in fallbacks.items():
+            if k in title_text:
+                return url
+        return 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80'
+
 
 
 class CropImage(models.Model):

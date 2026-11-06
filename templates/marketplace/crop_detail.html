@@ -2,7 +2,7 @@
 {% block title %}{{ crop.title }} – Agricultural Produce – AgriSure{% endblock %}
 
 {% block content %}
-<div class="bg-gray-50/50 py-8 border-b border-gray-100" x-data="{ currentImg: '{% if crop.featured_image %}{{ crop.featured_image.url }}{% endif %}' }">
+<div class="bg-gray-50/50 py-8 border-b border-gray-100" x-data="{ currentImg: '{{ crop.image_url }}' }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <!-- Breadcrumb & Top Actions -->
         <div class="flex items-center justify-between text-xs text-gray-500">
@@ -171,7 +171,7 @@
                             {% if crop.farmer.farmer_profile.profile_image %}
                                 <img src="{{ crop.farmer.farmer_profile.profile_image.url }}" class="w-full h-full object-cover">
                             {% else %}
-                                <i data-lucide="user" class="w-7 h-7 text-emerald-700"></i>
+                                <img src="{{ crop.farmer.farmer_profile.avatar_url }}" class="w-full h-full object-cover">
                             {% endif %}
                         </div>
                         <div>
@@ -235,11 +235,7 @@
                 {% for rc in related_crops %}
                 <div class="glass-card bg-white rounded-3xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
                     <div class="h-36 bg-gray-100 relative">
-                        {% if rc.featured_image %}
-                            <img src="{{ rc.featured_image.url }}" class="w-full h-full object-cover">
-                        {% else %}
-                            <div class="w-full h-full flex items-center justify-center text-emerald-600 bg-emerald-50"><i data-lucide="sprout" class="w-8 h-8"></i></div>
-                        {% endif %}
+                        <img src="{{ rc.image_url }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80';">
                         <span class="absolute top-2 right-2 badge badge-success text-[10px]">{{ rc.get_quality_grade_display }}</span>
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between space-y-2">

@@ -32,16 +32,24 @@
         </div>
 
         <!-- User Quick Card at Bottom -->
-        <div class="p-4 border-t border-gray-100 bg-gray-50/50">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-sm">
-                    {{ user.first_name|first }}{{ user.last_name|first }}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold text-gray-900 truncate">{{ user.get_full_name }}</p>
-                    <p class="text-[11px] text-emerald-700 font-semibold">{{ user.get_role_display }}</p>
-                </div>
-                <a href="{% url 'accounts:logout' %}" class="text-gray-400 hover:text-rose-600 p-1" title="Log Out">
+        <div class="p-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/60">
+            <div class="flex items-center gap-2.5">
+                {% if user.role == 'FARMER' %}
+                    <a href="{% url 'farmers:profile' %}" class="flex items-center gap-2.5 flex-1 min-w-0 group">
+                {% elif user.role == 'BUYER' %}
+                    <a href="{% url 'buyers:profile' %}" class="flex items-center gap-2.5 flex-1 min-w-0 group">
+                {% else %}
+                    <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2.5 flex-1 min-w-0 group">
+                {% endif %}
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-bold flex items-center justify-center text-xs shadow-sm flex-shrink-0">
+                        {{ user.first_name|first }}{{ user.last_name|first }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-600 transition-colors">{{ user.get_full_name }}</p>
+                        <p class="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">{{ user.get_role_display }}</p>
+                    </div>
+                </a>
+                <a href="{% url 'accounts:logout' %}" class="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors" title="Log Out of AgriSure">
                     <i data-lucide="log-out" class="w-4 h-4"></i>
                 </a>
             </div>
@@ -51,33 +59,119 @@
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         <!-- Top Sticky Header -->
-        <header class="h-18 bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header class="h-18 bg-white/80 dark:bg-gray-900/85 backdrop-blur-md border-b border-gray-200/60 dark:border-gray-800 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
             <div class="flex items-center gap-4">
-                <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100">
+                <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
-                <h1 class="font-heading font-extrabold text-xl text-forest-900">
+                <h1 class="font-heading font-extrabold text-xl text-forest-900 dark:text-white">
                     {% block dashboard_title %}Dashboard{% endblock %}
                 </h1>
             </div>
 
             <!-- Header Actions -->
-            <div class="flex items-center gap-4">
-                <a href="{% url 'marketplace:index' %}" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'marketplace:index' %}" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors">
                     <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
                     <span>Marketplace</span>
                 </a>
 
                 <!-- Notification Bell -->
-                <a href="{% url 'notifications:list' %}" class="relative p-2 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                <a href="{% url 'notifications:list' %}" class="relative p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-white transition-colors" title="Notifications">
                     <i data-lucide="bell" class="w-5 h-5"></i>
-                    <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900"></span>
                 </a>
 
                 <!-- Messages Bell -->
-                <a href="{% url 'messaging:inbox' %}" class="p-2 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                <a href="{% url 'messaging:inbox' %}" class="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-white transition-colors" title="Messages">
                     <i data-lucide="mail" class="w-5 h-5"></i>
                 </a>
+
+                <!-- Dual Theme Switcher (Black & White Switching) -->
+                <button onclick="toggleAgriSureTheme()" type="button" class="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800 transition-colors" title="Toggle Dark / Light Theme">
+                    <svg class="w-5 h-5 hidden dark:block text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg class="w-5 h-5 block dark:hidden text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+
+                <!-- Profile Dropdown with Logout -->
+                <div class="relative" x-data="{ profileDropdownOpen: false }" @click.outside="profileDropdownOpen = false">
+                    <button @click="profileDropdownOpen = !profileDropdownOpen" type="button" class="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-emerald-500/40 transition-all focus:outline-none">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-bold flex items-center justify-center text-xs shadow">
+                            {{ user.first_name|first }}{{ user.last_name|first }}
+                        </div>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 hidden sm:block"></i>
+                    </button>
+
+                    <div x-show="profileDropdownOpen" x-transition class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 py-2 z-50 divide-y divide-gray-100 dark:divide-gray-800">
+                        <!-- User Card -->
+                        <div class="px-4 py-3">
+                            <p class="text-xs text-gray-400 uppercase font-semibold">Signed in as</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white truncate mt-0.5">{{ user.get_full_name }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ user.email }}</p>
+                            <span class="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
+                                {{ user.get_role_display }}
+                            </span>
+                        </div>
+
+                        <!-- Menu Items -->
+                        <div class="py-1 text-sm font-medium">
+                            {% if user.role == 'FARMER' %}
+                                <a href="{% url 'farmers:profile' %}" class="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-700">
+                                    <i data-lucide="user" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Farm Profile & KYC</span>
+                                </a>
+                                <a href="{% url 'farmers:profile_edit' %}" class="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-700">
+                                    <i data-lucide="settings" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Edit Farm Settings</span>
+                                </a>
+                            {% elif user.role == 'BUYER' %}
+                                <a href="{% url 'buyers:profile' %}" class="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-700">
+                                    <i data-lucide="building" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Company Profile</span>
+                                </a>
+                                <a href="{% url 'buyers:profile_edit' %}" class="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-700">
+                                    <i data-lucide="settings" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Edit Procurement Info</span>
+                                </a>
+                            {% else %}
+                                <a href="{% url 'accounts:profile' %}" class="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-700">
+                                    <i data-lucide="user" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Account Settings</span>
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'accounts:change_password' %}" class="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-700">
+                                <i data-lucide="lock" class="w-4 h-4 text-emerald-600"></i>
+                                <span>Change Password</span>
+                            </a>
+                        </div>
+
+                        <!-- Dropdown Theme Toggle Switch -->
+                        <div class="py-1 px-4">
+                            <button onclick="toggleAgriSureTheme()" type="button" class="w-full flex items-center justify-between py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-emerald-600">
+                                <span class="flex items-center gap-2.5">
+                                    <i data-lucide="sun-moon" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>Theme</span>
+                                </span>
+                                <span class="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-semibold">
+                                    <span class="block dark:hidden">Light</span>
+                                    <span class="hidden dark:block">Dark</span>
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Logout Action Button -->
+                        <div class="py-1">
+                            <a href="{% url 'accounts:logout' %}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors">
+                                <i data-lucide="log-out" class="w-4 h-4"></i>
+                                <span>Log Out</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 

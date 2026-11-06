@@ -71,3 +71,14 @@ class FarmerProfile(models.Model):
         from django.db.models import Avg
         avg = Review.objects.filter(reviewee=self.user).aggregate(Avg('rating'))['rating__avg']
         return round(avg, 1) if avg else 5.0
+
+    @property
+    def avatar_url(self):
+        if self.profile_image:
+            try:
+                return self.profile_image.url
+            except Exception:
+                pass
+        name = self.user.get_full_name() or self.user.username
+        return f"https://api.dicebear.com/7.x/micah/svg?seed={name}&backgroundColor=ecfdf5"
+

@@ -31,9 +31,18 @@ SECRET_KEY = env('SECRET_KEY')
 
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
-if DEBUG:
-    ALLOWED_HOSTS.extend(['testserver', '0.0.0.0'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '.vercel.app', '.onrender.com'])
+for host in ['.vercel.app', '.onrender.com', 'localhost', '127.0.0.1', 'testserver', '0.0.0.0']:
+    if host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(host)
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://*.onrender.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
 
 # =============================================================================
 # APPLICATION DEFINITION
@@ -108,9 +117,18 @@ WSGI_APPLICATION = 'agrisure.wsgi.application'
 # DATABASE
 # =============================================================================
 
-DATABASES = {
-    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3')
-}
+if os.environ.get('VERCEL') == '1' and 'DATABASE_URL' not in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': '/tmp/db.sqlite3',
+        }
+    }
+else:
+    DATABASES = {
+        'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3')
+    }
+
 
 # =============================================================================
 # AUTHENTICATION

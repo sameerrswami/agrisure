@@ -71,6 +71,17 @@ class BuyerProfile(models.Model):
     def __str__(self):
         return f"{self.company_name or self.user.get_full_name()}"
 
+    @property
+    def logo_url(self):
+        if self.company_logo:
+            try:
+                return self.company_logo.url
+            except Exception:
+                pass
+        name = self.company_name or self.user.get_full_name() or "AgriCorp"
+        return f"https://api.dicebear.com/7.x/identicon/svg?seed={name}&backgroundColor=f0fdfa"
+
+
 
 class SavedCrop(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
